@@ -1,0 +1,24 @@
+{
+  "name": "lighthouse-ci",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "lhci": "node run-lighthouse.js",
+    "lhci:run": "node run-lighthouse.js",
+    "sitespeed": "node run-sitespeed.js",
+    "sitespeed:compare": "node compare-sitespeed.js",
+    "lhci:carbon": "node calculate-carbon.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "@lhci/server": "^0.15.1",
+    "@tgwf/co2": "^0.16.9",
+    "playwright": "^1.56.1",
+    "sitespeed.io": "^38.5.2",
+    "sqlite3": "^5.1.7"
+  }
+}

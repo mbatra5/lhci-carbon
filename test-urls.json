@@ -1,0 +1,13 @@
+{
+"urls": [
+  "https://canary-bp.navitas.bpglobal.com/qa-modal",
+  "https://canary-bp.navitas.bpglobal.com/qa-modal/hero-primary-static",
+  "https://canary-bp.navitas.bpglobal.com/qa-modal/hero-primary-static/qa-cards",
+  "https://canary-bp.navitas.bpglobal.com/qa-modal/hero-primary-static/qa-bento-cards",
+  "https://canary-bp.navitas.bpglobal.com/qa-modal/qa-hero-primary-with-autoplay",
+  "https://canary-bp.navitas.bpglobal.com/qa-modal/qa-filter-tile-list",
+  "https://canary-bp.navitas.bpglobal.com/qa-modal/qa-full-width-media-block",
+  "https://canary-bp.navitas.bpglobal.com/qa-modal/qa-anchor-link",
+  "https://canary-bp.navitas.bpglobal.com/qa-modal/hero-primary-static/qa-cards/qa-hero-primary-without-autoplay"
+]
+}

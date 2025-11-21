@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Carbon reports by host</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#f7f8fb;padding:28px;color:#111}
+  .card{background:#fff;padding:18px;border-radius:12px;max-width:900px;margin:8px auto;box-shadow:0 10px 30px rgba(10,10,20,0.06)}
+  ul{list-style:none;padding:0}
+  li{padding:10px 0;border-bottom:1px solid #f1f5f9}
+  a{color:#2b6cb0;text-decoration:none}
+  .small{color:#666;font-size:13px}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>🌱 Carbon reports by host</h1>
+    <p class="small">Grouped by hostname. Monthly views used: <strong>{{MONTHLY_VIEWS}}</strong></p>
+
+    <ul>
+      {{HOSTS}}
+    </ul>
+  </div>
+</body>
+</html>

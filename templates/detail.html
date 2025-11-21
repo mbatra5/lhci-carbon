@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{TITLE}}</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#f7f8fb;padding:28px;color:#111}
+    .card{background:#fff;padding:20px;border-radius:12px;max-width:980px;margin:0 auto;box-shadow:0 10px 30px rgba(10,10,20,0.06)}
+    h1{font-size:18px;margin:0 0 10px}
+    .small{color:#666;font-size:13px}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}
+    .metric{background:#fbfcff;padding:12px;border-radius:8px;border:1px solid #eef2ff}
+    .rating{display:inline-block;padding:6px 10px;border-radius:999px;color:white;font-weight:700}
+    .rating-green{background:#2ecc71;}
+    .rating-yellow{background:#f1c40f;color:#111}
+    .rating-orange{background:#e67e22;}
+    .rating-red{background:#e74c3c;}
+    a.button{display:inline-block;margin-top:10px;padding:8px 12px;background:#2b6cb0;color:white;border-radius:8px;text-decoration:none}
+    pre{background:#0f1724;color:#e6eef8;padding:12px;border-radius:8px;overflow:auto}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <a href="./index.html" class="button">← Back to {{HOSTNAME}} index</a>
+    <h1>Report — {{URL}}</h1>
+    <p class="small">Generated: {{GENERATED_AT}}</p>
+
+    <div class="grid">
+      <div class="metric"><strong>📦 Transfer</strong><div>{{TRANSFER_KB}} KB ({{TRANSFER_MB}} MB)</div></div>
+      <div class="metric"><strong>⭐ Performance</strong><div>{{PERF}}</div></div>
+
+      <div class="metric"><strong>🌍 CO₂ / visit</strong><div>{{CO2_PER_VISIT}} g</div></div>
+      <div class="metric"><strong>📅 CO₂ / month</strong><div>{{CO2_PER_MONTH}} kg ({{MONTHLY_VIEWS}} views/month)</div></div>
+
+      <div class="metric"><strong>📆 CO₂ / year</strong><div>{{CO2_PER_YEAR}} kg</div></div>
+      <div class="metric"><strong>Rating</strong>
+        <div><span class="rating {{RATING_CLASS}}">{{RATING_TEXT}}</span></div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:16px">Lighthouse excerpt (JSON)</h3>
+    <pre>{{LHR_EXCERPT}}</pre>
+
+    <p style="margin-top:12px" class="small">This page was generated from Lighthouse JSON files and the <code>@tgwf/co2</code> 1byte model.</p>
+  </div>
+</body>
+</html>

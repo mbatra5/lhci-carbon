@@ -1,0 +1,7 @@
+node_modules
+.lighthouseci
+carbon-reports-by-host
+sitespeed-results
+.lighthouserc.tmp.js
+cookies.json
+tokens.txt

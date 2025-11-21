@@ -1,0 +1,256 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{{HOSTNAME}} — Performance + Carbon Report</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#f7f8fb;padding:28px;color:#111}
+    h1{margin-bottom:6px}
+    .card{background:#fff;padding:18px;border-radius:12px;max-width:1400px;margin:8px auto;box-shadow:0 10px 30px rgba(10,10,20,0.06)}
+    
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .stat-box {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-box .label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .stat-box .value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #111;
+    }
+    .stat-box .unit {
+      font-size: 13px;
+      color: #888;
+    }
+    
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th,td{padding:10px;border-bottom:1px solid #f1f5f9;text-align:left;vertical-align:middle}
+    th{background:#fbfdff;cursor:pointer;user-select:none;position:relative;padding-right:24px}
+    th:hover{background:#f0f4ff}
+    th.sortable::after{content:'⇅';position:absolute;right:8px;color:#ccc;font-size:11px}
+    th.sort-asc::after{content:'↑';color:#2b6cb0}
+    th.sort-desc::after{content:'↓';color:#2b6cb0}
+    a{color:#2b6cb0;text-decoration:none}
+    .small{color:#666;font-size:13px}
+    
+    .benchmark {
+      margin-top: 12px;
+      margin-bottom: 20px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .benchmark h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+    .benchmark-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #eceff1;
+      text-align: left;
+    }
+    .benchmark-table th {
+      background: #f3f4f6;
+      font-weight: 600;
+    }
+    .co2-scale {
+      margin-top: 8px;
+    }
+    .scale-bar {
+      height: 10px;
+      border-radius: 4px;
+      background: linear-gradient(to right, #2ecc71, #f1c40f, #e67e22, #e74c3c);
+    }
+    .scale-labels {
+      display:flex;
+      justify-content:space-between;
+      font-size:11px;
+      color:#666;
+      margin-top:4px;
+    }
+    .rating-dot{
+      display:inline-block;
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      margin-right:6px;
+      vertical-align:middle;
+    }
+    .rating-green{background:#2ecc71;}
+    .rating-yellow{background:#f1c40f;}
+    .rating-orange{background:#e67e22;}
+    .rating-red{background:#e74c3c;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <a href="../index.html">← Top index</a>
+    <h1>🌱 {{HOSTNAME}} — Performance + Carbon Report</h1>
+    <div style="color:#666;font-size:13px;margin-bottom:12px">Generated: {{GENERATED_AT}}</div>
+    <div style="background:#e8f5e9;border-left:4px solid #27ae60;padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:14px;color:#1b5e20">
+      <strong>Assumptions:</strong> {{MONTHLY_VIEWS}} visits/month per page. Tree offset: 21 kg CO₂/year per tree.
+    </div>
+    <p class="small">Monthly views used for calculations: <strong>{{MONTHLY_VIEWS}}</strong></p>
+
+    <div class="summary-stats">
+      <div class="stat-box">
+        <div class="label">📊 Total URLs</div>
+        <div class="value">{{TOTAL_URLS}}</div>
+      </div>
+      <div class="stat-box">
+        <div class="label">🌍 Avg CO₂/visit</div>
+        <div class="value">{{AVG_CO2}}</div>
+        <div class="unit">grams</div>
+      </div>
+      <div class="stat-box">
+        <div class="label">📈 Total CO₂/year</div>
+        <div class="value">{{TOTAL_YEARLY_CO2}}</div>
+        <div class="unit">kg</div>
+      </div>
+      <div class="stat-box">
+        <div class="label">⚡ Avg Performance</div>
+        <div class="value">{{AVG_PERF}}</div>
+        <div class="unit">score</div>
+      </div>
+    </div>
+
+    <div class="benchmark">
+      <h3>🌍 Carbon Intensity Benchmarks (per page view)</h3>
+      <table class="benchmark-table">
+        <thead>
+          <tr><th>Rating</th><th>CO₂ (g/view)</th><th>Interpretation</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>🟢 Excellent</td><td>&lt; 0.5 g</td><td>Highly optimized, minimal impact</td></tr>
+          <tr><td>🟡 Good</td><td>0.5 – 1.0 g</td><td>Efficient site, some improvements possible</td></tr>
+          <tr><td>🟠 Fair</td><td>1.0 – 2.0 g</td><td>Average website; consider optimizations</td></tr>
+          <tr><td>🔴 Poor</td><td>&gt; 2.0 g</td><td>Heavy or inefficient; reduce payload & scripts</td></tr>
+        </tbody>
+      </table>
+
+      <div class="co2-scale">
+        <div class="scale-bar"></div>
+        <div class="scale-labels"><span>0g</span><span>0.5g</span><span>1g</span><span>2g</span><span>4g+</span></div>
+      </div>
+    </div>
+
+ <table id="dataTable">
+<thead><tr>
+  <th class="sortable" data-sort="url">URL</th>
+  <th class="sortable" data-sort="size">📦 Page Size (MB)</th>
+  <th class="sortable" data-sort="perf">Perf</th>
+  <th class="sortable" data-sort="co2visit">CO₂ / visit (g)</th>
+  <th class="sortable" data-sort="co2month">CO₂ / month (kg)</th>
+  <th class="sortable" data-sort="trees">🌳 Trees / year</th>
+  <th class="sortable" data-sort="rating">Rating</th>
+</tr></thead>
+      <tbody>
+        {{ROWS}}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // Simple table sorting
+    (function() {
+      const table = document.getElementById('dataTable');
+      const headers = table.querySelectorAll('th.sortable');
+      let currentSort = { col: null, dir: 'asc' };
+
+      headers.forEach(header => {
+        header.addEventListener('click', () => {
+          const sortType = header.getAttribute('data-sort');
+          const tbody = table.querySelector('tbody');
+          const rows = Array.from(tbody.querySelectorAll('tr'));
+
+          // Toggle direction
+          if (currentSort.col === sortType) {
+            currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+          } else {
+            currentSort.dir = 'asc';
+          }
+          currentSort.col = sortType;
+
+          // Clear all header states
+          headers.forEach(h => {
+            h.classList.remove('sort-asc', 'sort-desc');
+          });
+          header.classList.add(currentSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+
+          // Sort rows
+          rows.sort((a, b) => {
+            let aVal, bVal;
+            const cells = { a: a.querySelectorAll('td'), b: b.querySelectorAll('td') };
+
+switch(sortType) {
+case 'url':
+  aVal = cells.a[0].textContent.trim();
+  bVal = cells.b[0].textContent.trim();
+  break;
+case 'size':
+  aVal = parseFloat(cells.a[1].textContent) || 0;
+  bVal = parseFloat(cells.b[1].textContent) || 0;
+  break;
+case 'perf':
+  aVal = parseFloat(cells.a[2].textContent) || 0;
+  bVal = parseFloat(cells.b[2].textContent) || 0;
+  break;
+case 'co2visit':
+  aVal = parseFloat(cells.a[3].textContent) || 0;
+  bVal = parseFloat(cells.b[3].textContent) || 0;
+  break;
+case 'co2month':
+  aVal = parseFloat(cells.a[4].textContent) || 0;
+  bVal = parseFloat(cells.b[4].textContent) || 0;
+  break;
+case 'trees':
+  aVal = parseFloat(cells.a[5].textContent) || 0;
+  bVal = parseFloat(cells.b[5].textContent) || 0;
+  break;
+case 'rating':
+  aVal = cells.a[6].textContent.trim();
+  bVal = cells.b[6].textContent.trim();
+  break;
+default:
+  return 0;
+}
+            if (typeof aVal === 'string') {
+              return currentSort.dir === 'asc' 
+                ? aVal.localeCompare(bVal)
+                : bVal.localeCompare(aVal);
+            } else {
+              return currentSort.dir === 'asc' 
+                ? aVal - bVal
+                : bVal - aVal;
+            }
+          });
+
+          // Re-append sorted rows
+          rows.forEach(row => tbody.appendChild(row));
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
