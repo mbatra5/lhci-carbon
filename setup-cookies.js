@@ -16,7 +16,7 @@ try {
   // Open a new page
   const page = await context.newPage();
   console.log("Navigating to whitelisting IP address URL...");
-  await page.goto("https://canary-bp.navitas.bpglobal.com/nvp/ip-access");
+  await page.goto("URL Goes here");
 
   // Wait for page load and allow JS to set cookies
   await page.waitForLoadState("networkidle");
