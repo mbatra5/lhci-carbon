@@ -421,8 +421,10 @@ if (!lhciDataPath) {
 }
 
 let files = fs.readdirSync(lhciDataPath)
-  .filter(f => f.endsWith('.json'))
+  .filter(f => f.startsWith('lhr-') && f.endsWith('.json'))
   .map(f => path.join(lhciDataPath, f));
+
+console.log(`📊 Found ${files.length} Lighthouse report(s)\n`);
 
 const reports = files.map(fp => {
   try {
