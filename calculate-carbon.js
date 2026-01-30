@@ -342,6 +342,149 @@ gzip_types text/css text/javascript application/javascript;</pre></li>
 }
 
 /**
+ * Analyze opportunities to categorize as global (site-wide) or local (page-specific)
+ * @param {Object} opportunitiesByUrl - Map of URL to opportunities
+ * @param {Number} totalPages - Total number of pages analyzed
+ * @returns {Object} - Analysis with global and local issues
+ */
+function analyzeGlobalVsLocal(opportunitiesByUrl, totalPages) {
+  const issueCount = {}; // Track how many pages each issue appears on
+  const issueUrls = {}; // Track which URLs have each issue
+  
+  // Count occurrences of each issue type across all pages
+  Object.entries(opportunitiesByUrl).forEach(([url, opportunities]) => {
+    opportunities.forEach(opp => {
+      if (!issueCount[opp.id]) {
+        issueCount[opp.id] = 0;
+        issueUrls[opp.id] = [];
+      }
+      issueCount[opp.id]++;
+      issueUrls[opp.id].push(url);
+    });
+  });
+  
+  // Categorize issues
+  const globalIssues = []; // Appears on 50%+ of pages
+  const localIssues = [];   // Appears on < 50% of pages
+  const threshold = Math.ceil(totalPages * 0.5); // 50% threshold
+  
+  Object.entries(issueCount).forEach(([issueId, count]) => {
+    const percentage = Math.round((count / totalPages) * 100);
+    const isGlobal = count >= threshold;
+    
+    const issueInfo = {
+      id: issueId,
+      count: count,
+      percentage: percentage,
+      urls: issueUrls[issueId]
+    };
+    
+    if (isGlobal) {
+      globalIssues.push(issueInfo);
+    } else {
+      localIssues.push(issueInfo);
+    }
+  });
+  
+  // Sort by count (most common first)
+  globalIssues.sort((a, b) => b.count - a.count);
+  localIssues.sort((a, b) => b.count - a.count);
+  
+  return {
+    global: globalIssues,
+    local: localIssues,
+    totalPages: totalPages
+  };
+}
+
+/**
+ * Get friendly name for audit ID
+ * @param {String} auditId - Audit identifier
+ * @returns {String} - Human-readable name
+ */
+function getAuditFriendlyName(auditId) {
+  const names = {
+    'render-blocking-resources': 'Render-blocking resources',
+    'unused-css-rules': 'Unused CSS',
+    'unused-javascript': 'Unused JavaScript',
+    'modern-image-formats': 'Use modern image formats',
+    'offscreen-images': 'Lazy load offscreen images',
+    'unminified-css': 'Unminified CSS',
+    'unminified-javascript': 'Unminified JavaScript',
+    'uses-text-compression': 'Enable text compression',
+    'uses-responsive-images': 'Use responsive images',
+    'efficient-animated-content': 'Use video for animations',
+    'duplicated-javascript': 'Duplicated JavaScript',
+    'legacy-javascript': 'Legacy JavaScript',
+    'total-byte-weight': 'Large page size',
+    'uses-long-cache-ttl': 'Inefficient cache policy',
+    'font-display': 'Missing font-display',
+    'server-response-time': 'Slow server response',
+    'redirects': 'Avoid redirects',
+    'uses-rel-preconnect': 'Preconnect to required origins',
+    'dom-size': 'Excessive DOM size',
+    'bootup-time': 'Reduce JavaScript execution time',
+    'mainthread-work-breakdown': 'Minimize main-thread work',
+    'third-party-summary': 'Reduce third-party impact',
+    'largest-contentful-paint-element': 'Optimize LCP element',
+    'lcp-lazy-loaded': 'LCP image lazy-loaded',
+    'unsized-images': 'Missing image dimensions'
+  };
+  
+  return names[auditId] || auditId;
+}
+
+/**
+ * Generate HTML for global/local issues summary
+ * @param {Object} analysis - Analysis from analyzeGlobalVsLocal
+ * @returns {String} - HTML string
+ */
+function generateIssueSummaryHTML(analysis) {
+  let html = '<div class="issue-summary">';
+  
+  // Global Issues Section
+  html += '<div class="issue-category global-category">';
+  html += '<h3>🌐 Global Issues (Site-wide)</h3>';
+  html += '<p class="category-desc">These issues appear on <strong>50% or more</strong> pages. Fix once to benefit all pages.</p>';
+  
+  if (analysis.global.length === 0) {
+    html += '<p style="color:#27ae60">✓ No global issues found!</p>';
+  } else {
+    html += '<ul class="issue-list">';
+    analysis.global.forEach(issue => {
+      html += `<li>
+        <span class="issue-name">${escapeHtml(getAuditFriendlyName(issue.id))}</span>
+        <span class="issue-stat">${issue.count}/${analysis.totalPages} pages (${issue.percentage}%)</span>
+      </li>`;
+    });
+    html += '</ul>';
+  }
+  html += '</div>';
+  
+  // Local Issues Section
+  html += '<div class="issue-category local-category">';
+  html += '<h3>📄 Page-Specific Issues (Local)</h3>';
+  html += '<p class="category-desc">These issues appear on <strong>less than 50%</strong> of pages. Component-specific fixes.</p>';
+  
+  if (analysis.local.length === 0) {
+    html += '<p style="color:#27ae60">✓ No local-only issues found!</p>';
+  } else {
+    html += '<ul class="issue-list">';
+    analysis.local.forEach(issue => {
+      html += `<li>
+        <span class="issue-name">${escapeHtml(getAuditFriendlyName(issue.id))}</span>
+        <span class="issue-stat">${issue.count}/${analysis.totalPages} pages (${issue.percentage}%)</span>
+      </li>`;
+    });
+    html += '</ul>';
+  }
+  html += '</div>';
+  
+  html += '</div>';
+  return html;
+}
+
+/**
  * Strip out learn links from description
  * @param {String} description - Original description with links
  * @returns {String} - Clean description without learn links
@@ -355,9 +498,10 @@ function stripLearnLinks(description) {
 /**
  * Generate HTML for opportunities section with accordions
  * @param {Array} opportunities - Array of opportunity objects
+ * @param {Object} globalIssues - Set of global issue IDs for badge display
  * @returns {String} - HTML string
  */
-function generateOpportunitiesHTML(opportunities) {
+function generateOpportunitiesHTML(opportunities, globalIssues = {}) {
   if (opportunities.length === 0) {
     return '<p style="color:#27ae60;font-size:15px;padding:20px;background:#e8f5e9;border-radius:8px;border-left:4px solid #27ae60">✅ <strong>Excellent!</strong> No significant optimization opportunities found. This page is well optimized!</p>';
   }
@@ -370,10 +514,17 @@ function generateOpportunitiesHTML(opportunities) {
     const cleanDescription = stripLearnLinks(opp.description);
     const accordionId = `opp-${index}`;
     
+    // Check if this is a global issue
+    const isGlobal = globalIssues[opp.id];
+    const scopeBadge = isGlobal 
+      ? `<span class="scope-badge global-badge" title="Appears on ${isGlobal.count}/${isGlobal.total} pages (${isGlobal.percentage}%)">🌐 GLOBAL</span>`
+      : `<span class="scope-badge local-badge" title="Page-specific issue">📄 LOCAL</span>`;
+    
     html += `
       <div class="opportunity ${impactClass}">
         <div class="opp-header" onclick="toggleAccordion('${accordionId}')">
           <span class="opp-priority">${priority}</span>
+          ${scopeBadge}
           <h4 class="opp-title">${escapeHtml(opp.title)}</h4>
           ${opp.savingsText ? `<span class="opp-savings">💰 ${escapeHtml(opp.savingsText)}</span>` : ''}
           <span class="accordion-icon" id="${accordionId}-icon">▼</span>
@@ -446,6 +597,8 @@ const hostRowTpl = loadTemplate('host-row.html');
 const topIndexTpl = loadTemplate('top-index.html');
 
 const byHost = {};
+const opportunitiesByHost = {}; // Track opportunities per host for global analysis
+
 for (const report of reports) {
   const url = report.requestedUrl || report.finalUrl || (report.lhr && report.lhr.finalUrl) || 'unknown-url';
   let hostname = 'unknown-host';
@@ -453,7 +606,10 @@ for (const report of reports) {
     hostname = (new urlLib.URL(url)).hostname || 'unknown-host';
   } catch (e) {}
   
-  if (!byHost[hostname]) byHost[hostname] = [];
+  if (!byHost[hostname]) {
+    byHost[hostname] = [];
+    opportunitiesByHost[hostname] = {};
+  }
   byHost[hostname].push({ url, report });
 }
 
@@ -473,6 +629,27 @@ for (const hostname of Object.keys(byHost).sort()) {
     count: 0
   };
 
+  // FIRST PASS: Collect all opportunities for global/local analysis
+  const opportunitiesByUrl = {};
+  for (const { url, report } of byHost[hostname]) {
+    const opportunities = extractOpportunities(report);
+    opportunitiesByUrl[url] = opportunities;
+  }
+
+  // Analyze global vs local issues
+  const issueAnalysis = analyzeGlobalVsLocal(opportunitiesByUrl, byHost[hostname].length);
+  
+  // Create a lookup map for global issues
+  const globalIssuesMap = {};
+  issueAnalysis.global.forEach(issue => {
+    globalIssuesMap[issue.id] = {
+      count: issue.count,
+      total: issueAnalysis.totalPages,
+      percentage: issue.percentage
+    };
+  });
+
+  // SECOND PASS: Generate reports with global/local awareness
   for (const { url, report } of byHost[hostname]) {
     const transferBytes =
       (report.audits && report.audits['total-byte-weight'] && report.audits['total-byte-weight'].numericValue) ||
@@ -506,9 +683,9 @@ for (const hostname of Object.keys(byHost).sort()) {
     const fileBase = sanitizeFilename(url) || `report-${Date.now()}`;
     const detailFile = `${fileBase}.html`;
 
-    // Extract and format opportunities
-    const opportunities = extractOpportunities(report);
-    const opportunitiesHTML = generateOpportunitiesHTML(opportunities);
+    // Generate opportunities HTML with global/local badges
+    const opportunities = opportunitiesByUrl[url];
+    const opportunitiesHTML = generateOpportunitiesHTML(opportunities, globalIssuesMap);
 
     const detailVars = {
       TITLE: `Carbon + LH Report — ${escapeHtml(url)}`,
@@ -559,6 +736,9 @@ for (const hostname of Object.keys(byHost).sort()) {
   
   const totalYearlyCO2 = ((hostStats.totalCO2 * monthlyViews * 12) / 1000).toFixed(2);
 
+  // Generate issue summary HTML
+  const issueSummaryHTML = generateIssueSummaryHTML(issueAnalysis);
+
   const hostIndexHtml = render(hostIndexTpl, {
     HOSTNAME: hostname,
     GENERATED_AT: generatedAt,
@@ -567,6 +747,7 @@ for (const hostname of Object.keys(byHost).sort()) {
     AVG_CO2: avgCO2,
     AVG_PERF: avgPerf,
     TOTAL_YEARLY_CO2: totalYearlyCO2,
+    ISSUE_SUMMARY: issueSummaryHTML,
     ROWS: rowsHtml.join('\n')
   });
   

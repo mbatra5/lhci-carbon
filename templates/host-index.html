@@ -101,6 +101,20 @@
     .rating-yellow{background:#f1c40f;}
     .rating-orange{background:#e67e22;}
     .rating-red{background:#e74c3c;}
+    
+    /* Issue Summary Styles */
+    .issue-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:16px;margin:20px 0}
+    .issue-category{background:#fff;padding:18px;border-radius:10px;border:2px solid #e5e7eb}
+    .issue-category h3{margin:0 0 8px;font-size:17px;display:flex;align-items:center;gap:8px}
+    .category-desc{font-size:13px;color:#666;margin:0 0 12px;line-height:1.5}
+    .global-category{border-color:#3b82f6;background:#eff6ff}
+    .global-category h3{color:#1e40af}
+    .local-category{border-color:#8b5cf6;background:#f5f3ff}
+    .local-category h3{color:#5b21b6}
+    .issue-list{list-style:none;padding:0;margin:0}
+    .issue-list li{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;margin:4px 0;background:#fff;border-radius:6px;border:1px solid #e5e7eb;font-size:13px}
+    .issue-name{font-weight:600;color:#111}
+    .issue-stat{color:#666;font-size:12px;white-space:nowrap;margin-left:12px}
   </style>
 </head>
 <body>
@@ -134,6 +148,8 @@
         <div class="unit">score</div>
       </div>
     </div>
+
+    {{ISSUE_SUMMARY}}
 
     <div class="benchmark">
       <h3>🌍 Carbon Intensity Benchmarks (per page view)</h3>
