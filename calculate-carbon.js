@@ -8,6 +8,9 @@ const TEMPLATES_DIR = path.join(__dirname, 'templates');
 const OUT_ROOT = path.join(__dirname, 'carbon-reports-by-host');
 const DEFAULT_MONTHLY_VIEWS = 10000;
 
+// Load best practices from JSON file
+const BEST_PRACTICES = JSON.parse(fs.readFileSync(path.join(__dirname, 'best-practices.json'), 'utf8'));
+
 function loadTemplate(name) {
 const p = path.join(TEMPLATES_DIR, name);
 if (!fs.existsSync(p)) throw new Error(`Template not found: ${p}`);
@@ -129,216 +132,7 @@ function extractOpportunities(report) {
  * @returns {String} - HTML string with best practices
  */
 function getBestPractices(auditId) {
-  const practices = {
-    'render-blocking-resources': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Add <code>defer</code> or <code>async</code> attribute to script tags: <code>&lt;script defer src="script.js"&gt;</code></li>
-        <li>Move critical CSS inline in the <code>&lt;head&gt;</code></li>
-        <li>Load non-critical CSS asynchronously using media queries</li>
-        <li>Place scripts at the bottom of <code>&lt;body&gt;</code> tag when possible</li>
-      </ul>`,
-    'unused-css-rules': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Remove unused CSS classes and rules from stylesheets</li>
-        <li>Split CSS into per-page bundles instead of one large file</li>
-        <li>Use tools like PurgeCSS to automatically remove unused styles</li>
-        <li>Load page-specific styles only when needed</li>
-      </ul>`,
-    'unused-javascript': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Remove unused functions and libraries from bundles</li>
-        <li>Use code splitting to load JavaScript only when needed</li>
-        <li>Implement lazy loading: <code>import('module').then(...)</code></li>
-        <li>Use tree-shaking to eliminate dead code during build</li>
-      </ul>`,
-    'modern-image-formats': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Convert images to WebP format (25-35% smaller than JPEG)</li>
-        <li>Use <code>&lt;picture&gt;</code> tag with fallbacks:
-          <pre>&lt;picture&gt;
-  &lt;source srcset="image.webp" type="image/webp"&gt;
-  &lt;img src="image.jpg" alt="..."&gt;
-&lt;/picture&gt;</pre></li>
-        <li>Consider AVIF format for even better compression</li>
-      </ul>`,
-    'offscreen-images': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Add <code>loading="lazy"</code> attribute to images below the fold:
-          <pre>&lt;img src="image.jpg" loading="lazy" alt="..."&gt;</pre></li>
-        <li>Do NOT lazy-load images in the viewport (above the fold)</li>
-        <li>Consider intersection observer for custom lazy loading</li>
-      </ul>`,
-    'unminified-css': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Minify CSS files during build process</li>
-        <li>Remove whitespace, comments, and unnecessary characters</li>
-        <li>Use build tools like webpack, vite, or postcss</li>
-      </ul>`,
-    'unminified-javascript': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Minify JavaScript files during build process</li>
-        <li>Use tools like Terser or UglifyJS</li>
-        <li>Enable minification in webpack/vite configuration</li>
-      </ul>`,
-    'uses-text-compression': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Enable gzip or brotli compression on the web server</li>
-        <li><strong>Apache:</strong> Add to .htaccess:
-          <pre>AddOutputFilterByType DEFLATE text/html text/css text/javascript</pre></li>
-        <li><strong>Nginx:</strong> Add to config:
-          <pre>gzip on;
-gzip_types text/css text/javascript application/javascript;</pre></li>
-      </ul>`,
-    'uses-responsive-images': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Use <code>srcset</code> attribute to serve different sizes:
-          <pre>&lt;img srcset="small.jpg 480w, medium.jpg 800w, large.jpg 1200w" 
-     sizes="(max-width: 600px) 480px, 800px" 
-     src="medium.jpg" alt="..."&gt;</pre></li>
-        <li>Generate multiple image sizes during build</li>
-      </ul>`,
-    'uses-long-cache-ttl': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Set cache headers for static assets (CSS, JS, images):
-          <pre>Cache-Control: public, max-age=31536000, immutable</pre></li>
-        <li>Use versioned filenames: <code>app.v123.js</code></li>
-        <li>Configure CDN caching policies</li>
-      </ul>`,
-    'font-display': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Add <code>font-display: swap</code> to @font-face rules:
-          <pre>@font-face {
-  font-family: 'MyFont';
-  src: url('font.woff2');
-  font-display: swap;
-}</pre></li>
-        <li>This shows text immediately using fallback fonts</li>
-      </ul>`,
-    'uses-rel-preconnect': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Add preconnect hints for third-party domains in <code>&lt;head&gt;</code>:
-          <pre>&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
-&lt;link rel="preconnect" href="https://cdn.example.com"&gt;</pre></li>
-        <li>Use <code>dns-prefetch</code> for older browsers:
-          <pre>&lt;link rel="dns-prefetch" href="https://cdn.example.com"&gt;</pre></li>
-      </ul>`,
-    'dom-size': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Reduce number of DOM nodes (aim for &lt;1500 nodes)</li>
-        <li>Avoid deep nesting (max depth: 32)</li>
-        <li>Use virtualization for long lists (show only visible items)</li>
-        <li>Remove unnecessary wrapper divs</li>
-      </ul>`,
-    'bootup-time': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Split large JavaScript bundles into smaller chunks</li>
-        <li>Defer non-critical script execution</li>
-        <li>Remove or lazy-load heavy libraries</li>
-        <li>Use code splitting: load only what's needed per page</li>
-      </ul>`,
-    'mainthread-work-breakdown': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Move heavy computations to Web Workers</li>
-        <li>Break long tasks into smaller chunks using <code>setTimeout</code></li>
-        <li>Optimize JavaScript execution and parsing</li>
-        <li>Reduce main thread blocking time</li>
-      </ul>`,
-    'redirects': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Remove unnecessary redirect chains</li>
-        <li>Update links to point directly to final destination</li>
-        <li>Avoid HTTP to HTTPS redirects by using HTTPS links</li>
-      </ul>`,
-    'third-party-summary': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Audit and remove unnecessary third-party scripts</li>
-        <li>Load non-critical third-party scripts asynchronously</li>
-        <li>Use <code>async</code> or <code>defer</code> for analytics, ads</li>
-        <li>Consider self-hosting critical third-party resources</li>
-      </ul>`,
-    'lcp-lazy-loaded': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Remove <code>loading="lazy"</code> from the main hero/LCP image</li>
-        <li>Eagerly load above-the-fold images:
-          <pre>&lt;img src="hero.jpg" loading="eager" alt="..."&gt;</pre></li>
-        <li>Consider preloading the LCP image:
-          <pre>&lt;link rel="preload" as="image" href="hero.jpg"&gt;</pre></li>
-      </ul>`,
-    'unsized-images': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Add explicit width and height to all images:
-          <pre>&lt;img src="image.jpg" width="800" height="600" alt="..."&gt;</pre></li>
-        <li>This reserves space and prevents layout shifts</li>
-        <li>Browser scales images proportionally with CSS</li>
-      </ul>`,
-    'server-response-time': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Optimize database queries</li>
-        <li>Implement server-side caching (Redis, Memcached)</li>
-        <li>Use a CDN to serve content closer to users</li>
-        <li>Upgrade server resources if needed</li>
-      </ul>`,
-    'efficient-animated-content': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Convert GIF animations to video formats:
-          <pre>&lt;video autoplay loop muted playsinline&gt;
-  &lt;source src="animation.mp4" type="video/mp4"&gt;
-&lt;/video&gt;</pre></li>
-        <li>Videos are 80-90% smaller than GIFs</li>
-      </ul>`,
-    'duplicated-javascript': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Configure webpack to extract common chunks</li>
-        <li>Avoid bundling same library multiple times</li>
-        <li>Use shared vendor bundles for common dependencies</li>
-      </ul>`,
-    'legacy-javascript': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Update transpilation targets to modern browsers</li>
-        <li>Serve modern ES6+ code to modern browsers</li>
-        <li>Use differential loading: modern + legacy bundles</li>
-        <li>Reduce polyfills for newer browsers</li>
-      </ul>`,
-    'largest-contentful-paint-element': `
-      <strong>How to fix:</strong>
-      <ul>
-        <li>Optimize the largest content element (usually hero image)</li>
-        <li>Preload critical resources:
-          <pre>&lt;link rel="preload" as="image" href="hero.jpg"&gt;</pre></li>
-        <li>Reduce image file size</li>
-        <li>Use modern formats (WebP, AVIF)</li>
-      </ul>`
-  };
-
-  return practices[auditId] || `
-    <strong>Action needed:</strong>
-    <ul>
-      <li>Review this optimization with the development team</li>
-      <li>Check Lighthouse documentation for specific guidance</li>
-    </ul>`;
+  return BEST_PRACTICES[auditId] || BEST_PRACTICES['default'];
 }
 
 /**
@@ -440,48 +234,28 @@ function getAuditFriendlyName(auditId) {
  * @returns {String} - HTML string
  */
 function generateIssueSummaryHTML(analysis) {
-  let html = '<div class="issue-summary">';
+  const issueSummaryTpl = loadTemplate('issue-summary.html');
   
-  // Global Issues Section
-  html += '<div class="issue-category global-category">';
-  html += '<h3>🌐 Global Issues (Site-wide)</h3>';
-  html += '<p class="category-desc">These issues appear on <strong>50% or more</strong> pages. Fix once to benefit all pages.</p>';
+  // Build global issues list
+  let globalListHTML = analysis.global.length === 0 
+    ? '<p style="color:#27ae60">✓ No global issues found!</p>'
+    : '<ul class="issue-list">' + analysis.global.map(issue => 
+        `<li><span class="issue-name">${escapeHtml(getAuditFriendlyName(issue.id))}</span>` +
+        `<span class="issue-stat">${issue.count}/${analysis.totalPages} pages (${issue.percentage}%)</span></li>`
+      ).join('') + '</ul>';
   
-  if (analysis.global.length === 0) {
-    html += '<p style="color:#27ae60">✓ No global issues found!</p>';
-  } else {
-    html += '<ul class="issue-list">';
-    analysis.global.forEach(issue => {
-      html += `<li>
-        <span class="issue-name">${escapeHtml(getAuditFriendlyName(issue.id))}</span>
-        <span class="issue-stat">${issue.count}/${analysis.totalPages} pages (${issue.percentage}%)</span>
-      </li>`;
-    });
-    html += '</ul>';
-  }
-  html += '</div>';
+  // Build local issues list
+  let localListHTML = analysis.local.length === 0
+    ? '<p style="color:#27ae60">✓ No local-only issues found!</p>'
+    : '<ul class="issue-list">' + analysis.local.map(issue =>
+        `<li><span class="issue-name">${escapeHtml(getAuditFriendlyName(issue.id))}</span>` +
+        `<span class="issue-stat">${issue.count}/${analysis.totalPages} pages (${issue.percentage}%)</span></li>`
+      ).join('') + '</ul>';
   
-  // Local Issues Section
-  html += '<div class="issue-category local-category">';
-  html += '<h3>📄 Page-Specific Issues (Local)</h3>';
-  html += '<p class="category-desc">These issues appear on <strong>less than 50%</strong> of pages. Component-specific fixes.</p>';
-  
-  if (analysis.local.length === 0) {
-    html += '<p style="color:#27ae60">✓ No local-only issues found!</p>';
-  } else {
-    html += '<ul class="issue-list">';
-    analysis.local.forEach(issue => {
-      html += `<li>
-        <span class="issue-name">${escapeHtml(getAuditFriendlyName(issue.id))}</span>
-        <span class="issue-stat">${issue.count}/${analysis.totalPages} pages (${issue.percentage}%)</span>
-      </li>`;
-    });
-    html += '</ul>';
-  }
-  html += '</div>';
-  
-  html += '</div>';
-  return html;
+  return render(issueSummaryTpl, {
+    GLOBAL_ISSUES_LIST: globalListHTML,
+    LOCAL_ISSUES_LIST: localListHTML
+  });
 }
 
 /**
@@ -506,6 +280,7 @@ function generateOpportunitiesHTML(opportunities, globalIssues = {}) {
     return '<p style="color:#27ae60;font-size:15px;padding:20px;background:#e8f5e9;border-radius:8px;border-left:4px solid #27ae60">✅ <strong>Excellent!</strong> No significant optimization opportunities found. This page is well optimized!</p>';
   }
 
+  const oppTpl = loadTemplate('opportunity.html');
   let html = '<div class="opportunities">';
   
   opportunities.forEach((opp, index) => {
@@ -520,21 +295,18 @@ function generateOpportunitiesHTML(opportunities, globalIssues = {}) {
       ? `<span class="scope-badge global-badge" title="Appears on ${isGlobal.count}/${isGlobal.total} pages (${isGlobal.percentage}%)">🌐 GLOBAL</span>`
       : `<span class="scope-badge local-badge" title="Page-specific issue">📄 LOCAL</span>`;
     
-    html += `
-      <div class="opportunity ${impactClass}">
-        <div class="opp-header" onclick="toggleAccordion('${accordionId}')">
-          <span class="opp-priority">${priority}</span>
-          ${scopeBadge}
-          <h4 class="opp-title">${escapeHtml(opp.title)}</h4>
-          ${opp.savingsText ? `<span class="opp-savings">💰 ${escapeHtml(opp.savingsText)}</span>` : ''}
-          <span class="accordion-icon" id="${accordionId}-icon">▼</span>
-        </div>
-        <div class="opp-summary">${escapeHtml(cleanDescription)}</div>
-        <div class="opp-details" id="${accordionId}" style="display:none">
-          ${getBestPractices(opp.id)}
-        </div>
-      </div>
-    `;
+    const savings = opp.savingsText ? `<span class="opp-savings">💰 ${escapeHtml(opp.savingsText)}</span>` : '';
+    
+    html += render(oppTpl, {
+      IMPACT_CLASS: impactClass,
+      ACCORDION_ID: accordionId,
+      PRIORITY: priority,
+      SCOPE_BADGE: scopeBadge,
+      TITLE: escapeHtml(opp.title),
+      SAVINGS: savings,
+      DESCRIPTION: escapeHtml(cleanDescription),
+      BEST_PRACTICES: getBestPractices(opp.id)
+    });
   });
   
   html += '</div>';

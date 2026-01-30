@@ -1,0 +1,13 @@
+<div class="opportunity {{IMPACT_CLASS}}">
+  <div class="opp-header" onclick="toggleAccordion('{{ACCORDION_ID}}')">
+    <span class="opp-priority">{{PRIORITY}}</span>
+    {{SCOPE_BADGE}}
+    <h4 class="opp-title">{{TITLE}}</h4>
+    {{SAVINGS}}
+    <span class="accordion-icon" id="{{ACCORDION_ID}}-icon">▼</span>
+  </div>
+  <div class="opp-summary">{{DESCRIPTION}}</div>
+  <div class="opp-details" id="{{ACCORDION_ID}}" style="display:none">
+    {{BEST_PRACTICES}}
+  </div>
+</div>
