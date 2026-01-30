@@ -22,18 +22,26 @@
     
     /* Opportunities styles */
     .opportunities{margin-top:16px}
-    .opportunity{background:#fff;border:2px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:14px;transition:box-shadow 0.2s}
+    .opportunity{background:#fff;border:2px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:14px;transition:all 0.2s}
     .opportunity:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1)}
     .opportunity.high-impact{border-color:#e74c3c;background:#fff5f5}
     .opportunity.medium-impact{border-color:#f39c12;background:#fffbf0}
     .opportunity.low-impact{border-color:#95a5a6;background:#f8f9fa}
-    .opp-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+    .opp-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;cursor:pointer;user-select:none}
+    .opp-header:hover{opacity:0.9}
     .opp-priority{font-size:11px;font-weight:bold;padding:5px 10px;border-radius:5px;background:#333;color:white;white-space:nowrap}
     .opp-title{margin:0;font-size:16px;flex:1;min-width:200px;color:#111}
-    .opp-savings{font-size:13px;color:#27ae60;font-weight:600;background:#e8f5e9;padding:4px 10px;border-radius:5px}
-    .opp-description{color:#555;font-size:14px;margin:8px 0;line-height:1.6}
-    .opp-action{background:#e8f5e9;border-left:4px solid #27ae60;padding:12px 14px;margin-top:12px;border-radius:4px;font-size:13px;line-height:1.5}
-    .opp-action strong{color:#1b5e20}
+    .opp-savings{font-size:13px;color:#27ae60;font-weight:600;background:#e8f5e9;padding:4px 10px;border-radius:5px;white-space:nowrap}
+    .accordion-icon{font-size:12px;color:#666;transition:transform 0.2s;margin-left:auto}
+    .accordion-icon.open{transform:rotate(180deg)}
+    .opp-summary{color:#555;font-size:14px;margin:8px 0 12px;line-height:1.5}
+    .opp-details{margin-top:12px;padding:14px;background:#f9fafb;border-radius:6px;border:1px solid #e5e7eb;font-size:13px;line-height:1.6}
+    .opp-details strong{color:#111;display:block;margin-bottom:8px}
+    .opp-details ul{margin:8px 0;padding-left:20px}
+    .opp-details li{margin:6px 0}
+    .opp-details code{background:#fff;padding:2px 6px;border-radius:3px;font-size:12px;border:1px solid #ddd}
+    .opp-details pre{background:#2d3748;color:#e2e8f0;padding:10px;border-radius:4px;overflow-x:auto;margin:8px 0;font-size:11px;line-height:1.4}
+    .opp-details pre code{background:transparent;border:none;color:#e2e8f0;padding:0}
     
     details{margin-top:24px;border:1px solid #ddd;border-radius:8px;padding:12px}
     summary{cursor:pointer;color:#666;font-size:13px;font-weight:600;user-select:none}
@@ -64,7 +72,8 @@
       Listed below are optimization opportunities prioritized by potential impact. 
       <strong style="color:#e74c3c">🔴 HIGH priority</strong> items provide the biggest performance improvements and should be addressed first.
       <strong style="color:#f39c12">🟡 MEDIUM priority</strong> items offer moderate improvements.
-      <strong style="color:#95a5a6">🟢 LOW priority</strong> items are nice-to-have optimizations.
+      <strong style="color:#95a5a6">🟢 LOW priority</strong> items are nice-to-have optimizations.<br>
+      <strong>💡 Click on any opportunity</strong> to expand and see best practices for resolving it.
     </p>
 
     {{OPPORTUNITIES_HTML}}
@@ -79,5 +88,20 @@
       Carbon calculations assume {{MONTHLY_VIEWS}} monthly views per page.
     </p>
   </div>
+
+  <script>
+    function toggleAccordion(id) {
+      const content = document.getElementById(id);
+      const icon = document.getElementById(id + '-icon');
+      
+      if (content.style.display === 'none' || content.style.display === '') {
+        content.style.display = 'block';
+        icon.classList.add('open');
+      } else {
+        content.style.display = 'none';
+        icon.classList.remove('open');
+      }
+    }
+  </script>
 </body>
 </html>

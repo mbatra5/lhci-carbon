@@ -124,51 +124,236 @@ function extractOpportunities(report) {
 }
 
 /**
- * Generate actionable steps for QA teams based on audit ID
- * @param {Object} opp - Opportunity object
- * @returns {String} - HTML string with actionable steps
+ * Get best practices for resolving specific audit issues
+ * @param {String} auditId - Audit identifier
+ * @returns {String} - HTML string with best practices
  */
-function generateActionableSteps(opp) {
-  // Map audit IDs to QA-friendly action items
-  const actionMap = {
-    'render-blocking-resources': 'Ask dev to defer non-critical CSS/JS or move scripts to bottom of page. This will improve initial page load time.',
-    'unused-css-rules': 'Request removal of unused CSS styles to reduce file size. Check if CSS can be split per page.',
-    'unused-javascript': 'Request removal of unused JavaScript code or implement lazy-loading for code that\'s not immediately needed.',
-    'modern-image-formats': 'Ask dev to convert images to WebP or AVIF format. These formats are 25-35% smaller than JPEG/PNG.',
-    'offscreen-images': 'Request lazy loading for images that appear below the fold (not visible on initial page load).',
-    'unminified-css': 'Ask dev to minify CSS files before deployment. This removes whitespace and comments.',
-    'unminified-javascript': 'Ask dev to minify JavaScript files before deployment. This removes whitespace and shortens variable names.',
-    'uses-text-compression': 'Request enabling gzip or brotli compression on the server for text-based resources.',
-    'uses-responsive-images': 'Ask dev to serve appropriately-sized images for different screen sizes and devices.',
-    'efficient-animated-content': 'Request converting GIF animations to video formats (MP4/WebM). Videos are much smaller.',
-    'duplicated-javascript': 'Request removing duplicate JavaScript code that appears in multiple bundles.',
-    'legacy-javascript': 'Ask dev to modernize JavaScript code to reduce polyfills and transpilation overhead.',
-    'total-byte-weight': 'Request overall page weight reduction. Consider optimizing images, scripts, and styles.',
-    'uses-long-cache-ttl': 'Ask dev to set proper cache headers (1 year) for static assets to improve repeat visits.',
-    'font-display': 'Request adding "font-display: swap" to font declarations to prevent invisible text.',
-    'server-response-time': 'Report slow server response time (should be under 600ms). May need backend optimization or CDN.',
-    'redirects': 'Request removal of unnecessary redirects. Each redirect adds latency.',
-    'uses-rel-preconnect': 'Ask dev to add preconnect hints for third-party domains to establish connections earlier.',
-    'dom-size': 'Request reducing number of DOM elements on the page. Large DOMs slow down rendering and JavaScript.',
-    'bootup-time': 'Request reducing JavaScript execution time during page load. Consider code splitting.',
-    'mainthread-work-breakdown': 'Request optimizing JavaScript that blocks the main thread. This causes slow interactions.',
-    'third-party-summary': 'Review third-party scripts. They may be slowing down the page significantly.',
-    'largest-contentful-paint-element': 'The largest content element is loading slowly. Optimize this element\'s resources.',
-    'lcp-lazy-loaded': 'The LCP (main content) image should NOT be lazy-loaded. Ask dev to eagerly load it.',
-    'unsized-images': 'Request adding width and height attributes to images to prevent layout shifts.'
+function getBestPractices(auditId) {
+  const practices = {
+    'render-blocking-resources': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Add <code>defer</code> or <code>async</code> attribute to script tags: <code>&lt;script defer src="script.js"&gt;</code></li>
+        <li>Move critical CSS inline in the <code>&lt;head&gt;</code></li>
+        <li>Load non-critical CSS asynchronously using media queries</li>
+        <li>Place scripts at the bottom of <code>&lt;body&gt;</code> tag when possible</li>
+      </ul>`,
+    'unused-css-rules': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Remove unused CSS classes and rules from stylesheets</li>
+        <li>Split CSS into per-page bundles instead of one large file</li>
+        <li>Use tools like PurgeCSS to automatically remove unused styles</li>
+        <li>Load page-specific styles only when needed</li>
+      </ul>`,
+    'unused-javascript': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Remove unused functions and libraries from bundles</li>
+        <li>Use code splitting to load JavaScript only when needed</li>
+        <li>Implement lazy loading: <code>import('module').then(...)</code></li>
+        <li>Use tree-shaking to eliminate dead code during build</li>
+      </ul>`,
+    'modern-image-formats': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Convert images to WebP format (25-35% smaller than JPEG)</li>
+        <li>Use <code>&lt;picture&gt;</code> tag with fallbacks:
+          <pre>&lt;picture&gt;
+  &lt;source srcset="image.webp" type="image/webp"&gt;
+  &lt;img src="image.jpg" alt="..."&gt;
+&lt;/picture&gt;</pre></li>
+        <li>Consider AVIF format for even better compression</li>
+      </ul>`,
+    'offscreen-images': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Add <code>loading="lazy"</code> attribute to images below the fold:
+          <pre>&lt;img src="image.jpg" loading="lazy" alt="..."&gt;</pre></li>
+        <li>Do NOT lazy-load images in the viewport (above the fold)</li>
+        <li>Consider intersection observer for custom lazy loading</li>
+      </ul>`,
+    'unminified-css': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Minify CSS files during build process</li>
+        <li>Remove whitespace, comments, and unnecessary characters</li>
+        <li>Use build tools like webpack, vite, or postcss</li>
+      </ul>`,
+    'unminified-javascript': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Minify JavaScript files during build process</li>
+        <li>Use tools like Terser or UglifyJS</li>
+        <li>Enable minification in webpack/vite configuration</li>
+      </ul>`,
+    'uses-text-compression': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Enable gzip or brotli compression on the web server</li>
+        <li><strong>Apache:</strong> Add to .htaccess:
+          <pre>AddOutputFilterByType DEFLATE text/html text/css text/javascript</pre></li>
+        <li><strong>Nginx:</strong> Add to config:
+          <pre>gzip on;
+gzip_types text/css text/javascript application/javascript;</pre></li>
+      </ul>`,
+    'uses-responsive-images': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Use <code>srcset</code> attribute to serve different sizes:
+          <pre>&lt;img srcset="small.jpg 480w, medium.jpg 800w, large.jpg 1200w" 
+     sizes="(max-width: 600px) 480px, 800px" 
+     src="medium.jpg" alt="..."&gt;</pre></li>
+        <li>Generate multiple image sizes during build</li>
+      </ul>`,
+    'uses-long-cache-ttl': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Set cache headers for static assets (CSS, JS, images):
+          <pre>Cache-Control: public, max-age=31536000, immutable</pre></li>
+        <li>Use versioned filenames: <code>app.v123.js</code></li>
+        <li>Configure CDN caching policies</li>
+      </ul>`,
+    'font-display': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Add <code>font-display: swap</code> to @font-face rules:
+          <pre>@font-face {
+  font-family: 'MyFont';
+  src: url('font.woff2');
+  font-display: swap;
+}</pre></li>
+        <li>This shows text immediately using fallback fonts</li>
+      </ul>`,
+    'uses-rel-preconnect': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Add preconnect hints for third-party domains in <code>&lt;head&gt;</code>:
+          <pre>&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+&lt;link rel="preconnect" href="https://cdn.example.com"&gt;</pre></li>
+        <li>Use <code>dns-prefetch</code> for older browsers:
+          <pre>&lt;link rel="dns-prefetch" href="https://cdn.example.com"&gt;</pre></li>
+      </ul>`,
+    'dom-size': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Reduce number of DOM nodes (aim for &lt;1500 nodes)</li>
+        <li>Avoid deep nesting (max depth: 32)</li>
+        <li>Use virtualization for long lists (show only visible items)</li>
+        <li>Remove unnecessary wrapper divs</li>
+      </ul>`,
+    'bootup-time': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Split large JavaScript bundles into smaller chunks</li>
+        <li>Defer non-critical script execution</li>
+        <li>Remove or lazy-load heavy libraries</li>
+        <li>Use code splitting: load only what's needed per page</li>
+      </ul>`,
+    'mainthread-work-breakdown': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Move heavy computations to Web Workers</li>
+        <li>Break long tasks into smaller chunks using <code>setTimeout</code></li>
+        <li>Optimize JavaScript execution and parsing</li>
+        <li>Reduce main thread blocking time</li>
+      </ul>`,
+    'redirects': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Remove unnecessary redirect chains</li>
+        <li>Update links to point directly to final destination</li>
+        <li>Avoid HTTP to HTTPS redirects by using HTTPS links</li>
+      </ul>`,
+    'third-party-summary': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Audit and remove unnecessary third-party scripts</li>
+        <li>Load non-critical third-party scripts asynchronously</li>
+        <li>Use <code>async</code> or <code>defer</code> for analytics, ads</li>
+        <li>Consider self-hosting critical third-party resources</li>
+      </ul>`,
+    'lcp-lazy-loaded': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Remove <code>loading="lazy"</code> from the main hero/LCP image</li>
+        <li>Eagerly load above-the-fold images:
+          <pre>&lt;img src="hero.jpg" loading="eager" alt="..."&gt;</pre></li>
+        <li>Consider preloading the LCP image:
+          <pre>&lt;link rel="preload" as="image" href="hero.jpg"&gt;</pre></li>
+      </ul>`,
+    'unsized-images': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Add explicit width and height to all images:
+          <pre>&lt;img src="image.jpg" width="800" height="600" alt="..."&gt;</pre></li>
+        <li>This reserves space and prevents layout shifts</li>
+        <li>Browser scales images proportionally with CSS</li>
+      </ul>`,
+    'server-response-time': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Optimize database queries</li>
+        <li>Implement server-side caching (Redis, Memcached)</li>
+        <li>Use a CDN to serve content closer to users</li>
+        <li>Upgrade server resources if needed</li>
+      </ul>`,
+    'efficient-animated-content': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Convert GIF animations to video formats:
+          <pre>&lt;video autoplay loop muted playsinline&gt;
+  &lt;source src="animation.mp4" type="video/mp4"&gt;
+&lt;/video&gt;</pre></li>
+        <li>Videos are 80-90% smaller than GIFs</li>
+      </ul>`,
+    'duplicated-javascript': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Configure webpack to extract common chunks</li>
+        <li>Avoid bundling same library multiple times</li>
+        <li>Use shared vendor bundles for common dependencies</li>
+      </ul>`,
+    'legacy-javascript': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Update transpilation targets to modern browsers</li>
+        <li>Serve modern ES6+ code to modern browsers</li>
+        <li>Use differential loading: modern + legacy bundles</li>
+        <li>Reduce polyfills for newer browsers</li>
+      </ul>`,
+    'largest-contentful-paint-element': `
+      <strong>How to fix:</strong>
+      <ul>
+        <li>Optimize the largest content element (usually hero image)</li>
+        <li>Preload critical resources:
+          <pre>&lt;link rel="preload" as="image" href="hero.jpg"&gt;</pre></li>
+        <li>Reduce image file size</li>
+        <li>Use modern formats (WebP, AVIF)</li>
+      </ul>`
   };
 
-  const action = actionMap[opp.id] || 'Review this optimization with the development team.';
-  
-  return `
-    <div class="opp-action">
-      <strong>📋 What to report to dev:</strong> ${escapeHtml(action)}
-    </div>
-  `;
+  return practices[auditId] || `
+    <strong>Action needed:</strong>
+    <ul>
+      <li>Review this optimization with the development team</li>
+      <li>Check Lighthouse documentation for specific guidance</li>
+    </ul>`;
 }
 
 /**
- * Generate HTML for opportunities section
+ * Strip out learn links from description
+ * @param {String} description - Original description with links
+ * @returns {String} - Clean description without learn links
+ */
+function stripLearnLinks(description) {
+  if (!description) return '';
+  // Remove [Learn how to...](url) markdown links
+  return description.replace(/\s*\[Learn[^\]]*\]\([^)]*\)\.?/gi, '');
+}
+
+/**
+ * Generate HTML for opportunities section with accordions
  * @param {Array} opportunities - Array of opportunity objects
  * @returns {String} - HTML string
  */
@@ -182,16 +367,21 @@ function generateOpportunitiesHTML(opportunities) {
   opportunities.forEach((opp, index) => {
     const priority = index < 3 ? '🔴 HIGH' : index < 6 ? '🟡 MEDIUM' : '🟢 LOW';
     const impactClass = index < 3 ? 'high-impact' : index < 6 ? 'medium-impact' : 'low-impact';
+    const cleanDescription = stripLearnLinks(opp.description);
+    const accordionId = `opp-${index}`;
     
     html += `
       <div class="opportunity ${impactClass}">
-        <div class="opp-header">
+        <div class="opp-header" onclick="toggleAccordion('${accordionId}')">
           <span class="opp-priority">${priority}</span>
           <h4 class="opp-title">${escapeHtml(opp.title)}</h4>
-          ${opp.savingsText ? `<span class="opp-savings">💰 Potential savings: ${escapeHtml(opp.savingsText)}</span>` : ''}
+          ${opp.savingsText ? `<span class="opp-savings">💰 ${escapeHtml(opp.savingsText)}</span>` : ''}
+          <span class="accordion-icon" id="${accordionId}-icon">▼</span>
         </div>
-        <div class="opp-description">${escapeHtml(opp.description)}</div>
-        ${generateActionableSteps(opp)}
+        <div class="opp-summary">${escapeHtml(cleanDescription)}</div>
+        <div class="opp-details" id="${accordionId}" style="display:none">
+          ${getBestPractices(opp.id)}
+        </div>
       </div>
     `;
   });
@@ -341,17 +531,6 @@ for (const hostname of Object.keys(byHost).sort()) {
     const detailHtml = render(detailTpl, detailVars);
     fs.writeFileSync(path.join(hostDir, detailFile), detailHtml, 'utf8');
 
-    // Generate opportunities badge for table
-    let opportunitiesBadge = '';
-    if (opportunities.length === 0) {
-      opportunitiesBadge = '<span style="color:#27ae60;font-weight:600">✓ 0</span>';
-    } else {
-      const highPriorityCount = opportunities.filter((_, i) => i < 3).length;
-      const badgeColor = highPriorityCount > 0 ? '#e74c3c' : opportunities.length > 3 ? '#f39c12' : '#95a5a6';
-      const badgeIcon = highPriorityCount > 0 ? '🔴' : '🟡';
-      opportunitiesBadge = `<span style="color:${badgeColor};font-weight:700">${badgeIcon} ${opportunities.length}</span>`;
-    }
-
     const rowVars = {
       DETAIL_FILE: detailFile,
       URL: escapeHtml(url),
@@ -362,8 +541,7 @@ for (const hostname of Object.keys(byHost).sort()) {
       TREES_PER_YEAR: treesPerYear,
       RATING_CLASS: rating.cssClass,
       RATING_TEXT: rating.text,
-      RATING_TEXT_PLAIN: rating.textPlain,
-      OPPORTUNITIES_BADGE: opportunitiesBadge
+      RATING_TEXT_PLAIN: rating.textPlain
     };
     rowsHtml.push(render(hostRowTpl, rowVars));
   }
