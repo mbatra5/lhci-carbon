@@ -164,6 +164,7 @@
   <th class="sortable" data-sort="co2month">CO₂ / month (kg)</th>
   <th class="sortable" data-sort="trees">🌳 Trees / year</th>
   <th class="sortable" data-sort="rating">Rating</th>
+  <th class="sortable" data-sort="opportunities">🎯 Issues</th>
 </tr></thead>
       <tbody>
         {{ROWS}}
@@ -231,6 +232,10 @@ case 'trees':
 case 'rating':
   aVal = cells.a[6].textContent.trim();
   bVal = cells.b[6].textContent.trim();
+  break;
+case 'opportunities':
+  aVal = parseFloat(cells.a[7].textContent) || 0;
+  bVal = parseFloat(cells.b[7].textContent) || 0;
   break;
 default:
   return 0;

@@ -8,6 +8,7 @@
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#f7f8fb;padding:28px;color:#111}
     .card{background:#fff;padding:20px;border-radius:12px;max-width:980px;margin:0 auto;box-shadow:0 10px 30px rgba(10,10,20,0.06)}
     h1{font-size:18px;margin:0 0 10px}
+    h2{font-size:20px;margin:24px 0 8px;color:#111}
     .small{color:#666;font-size:13px}
     .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}
     .metric{background:#fbfcff;padding:12px;border-radius:8px;border:1px solid #eef2ff}
@@ -17,7 +18,26 @@
     .rating-orange{background:#e67e22;}
     .rating-red{background:#e74c3c;}
     a.button{display:inline-block;margin-top:10px;padding:8px 12px;background:#2b6cb0;color:white;border-radius:8px;text-decoration:none}
-    pre{background:#0f1724;color:#e6eef8;padding:12px;border-radius:8px;overflow:auto}
+    pre{background:#0f1724;color:#e6eef8;padding:12px;border-radius:8px;overflow:auto;font-size:12px}
+    
+    /* Opportunities styles */
+    .opportunities{margin-top:16px}
+    .opportunity{background:#fff;border:2px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:14px;transition:box-shadow 0.2s}
+    .opportunity:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+    .opportunity.high-impact{border-color:#e74c3c;background:#fff5f5}
+    .opportunity.medium-impact{border-color:#f39c12;background:#fffbf0}
+    .opportunity.low-impact{border-color:#95a5a6;background:#f8f9fa}
+    .opp-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+    .opp-priority{font-size:11px;font-weight:bold;padding:5px 10px;border-radius:5px;background:#333;color:white;white-space:nowrap}
+    .opp-title{margin:0;font-size:16px;flex:1;min-width:200px;color:#111}
+    .opp-savings{font-size:13px;color:#27ae60;font-weight:600;background:#e8f5e9;padding:4px 10px;border-radius:5px}
+    .opp-description{color:#555;font-size:14px;margin:8px 0;line-height:1.6}
+    .opp-action{background:#e8f5e9;border-left:4px solid #27ae60;padding:12px 14px;margin-top:12px;border-radius:4px;font-size:13px;line-height:1.5}
+    .opp-action strong{color:#1b5e20}
+    
+    details{margin-top:24px;border:1px solid #ddd;border-radius:8px;padding:12px}
+    summary{cursor:pointer;color:#666;font-size:13px;font-weight:600;user-select:none}
+    summary:hover{color:#2b6cb0}
   </style>
 </head>
 <body>
@@ -39,10 +59,25 @@
       </div>
     </div>
 
-    <h3 style="margin-top:16px">Lighthouse excerpt (JSON)</h3>
-    <pre>{{LHR_EXCERPT}}</pre>
+    <h2>🎯 Performance Optimization Opportunities</h2>
+    <p class="small" style="margin-bottom:16px;line-height:1.5">
+      Listed below are optimization opportunities prioritized by potential impact. 
+      <strong style="color:#e74c3c">🔴 HIGH priority</strong> items provide the biggest performance improvements and should be addressed first.
+      <strong style="color:#f39c12">🟡 MEDIUM priority</strong> items offer moderate improvements.
+      <strong style="color:#95a5a6">🟢 LOW priority</strong> items are nice-to-have optimizations.
+    </p>
 
-    <p style="margin-top:12px" class="small">This page was generated from Lighthouse JSON files and the <code>@tgwf/co2</code> 1byte model.</p>
+    {{OPPORTUNITIES_HTML}}
+
+    <details>
+      <summary>🔍 View raw Lighthouse data (for technical debugging)</summary>
+      <pre style="margin-top:12px">{{LHR_EXCERPT}}</pre>
+    </details>
+
+    <p style="margin-top:20px" class="small">
+      This page was generated from Lighthouse JSON files and the <code>@tgwf/co2</code> 1byte model.
+      Carbon calculations assume {{MONTHLY_VIEWS}} monthly views per page.
+    </p>
   </div>
 </body>
 </html>
