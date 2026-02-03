@@ -157,7 +157,7 @@ if (opportunities.length === 0) {
 ## 🧪 Testing
 
 Tested with:
-- 9 URLs from canary-bp.navitas.bpglobal.com
+- Multiple URLs tested across the site
 - Various performance scores (27-42)
 - Different opportunity counts (8-16 per page)
 

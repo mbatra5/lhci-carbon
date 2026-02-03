@@ -408,7 +408,7 @@ npm run lhci:carbon 50000
 📁 Found Lighthouse data at: .lighthouseci
 📊 Found 9 Lighthouse report(s)
 
-✅ Wrote 9 report(s) for host: canary-bp.navitas.bpglobal.com
+✅ Wrote 3 report(s) for host: example.com
 
 📂 All reports written to: carbon-reports-by-host
 🧭 Open carbon-reports-by-host/index.html in your browser.

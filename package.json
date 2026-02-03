@@ -5,10 +5,8 @@
   "scripts": {
     "lhci:server": "npx lhci server --storage.storageMethod=sql --storage.sqlDialect=sqlite --storage.sqlDatabasePath=./lhci.db",
     "lhci": "node run-lighthouse.js",
-    "lhci:run": "node run-lighthouse.js",
-    "sitespeed": "node run-sitespeed.js",
-    "sitespeed:compare": "node compare-sitespeed.js",
-    "lhci:carbon": "node calculate-carbon.js"
+    "lhci:carbon": "node calculate-carbon.js",
+    "sitespeed": "node run-sitespeed.js"
   },
   "keywords": [],
   "author": "",

@@ -5,5 +5,5 @@ sitespeed-results
 .lighthouserc.tmp.js
 cookies.json
 tokens.txt
-test-urls.json
-setup-cookies.js
+lhci.db
+.DS_Store

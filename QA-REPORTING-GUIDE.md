@@ -116,7 +116,7 @@ Action Required:
 Defer non-critical CSS/JS or move scripts to bottom of page to improve 
 initial page load time.
 
-URL: https://canary-bp.navitas.bpglobal.com/qa-modal
+URL: https://example.com/page-name
 Report: [attach screenshot]
 ```
 
