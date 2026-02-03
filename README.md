@@ -12,6 +12,7 @@ A comprehensive performance testing solution that combines **Google Lighthouse**
 - [How It Works](#how-it-works)
 - [Prerequisites](#prerequisites)
 - [Quick Start Guide](#quick-start-guide)
+  - [First-Time Setup](#first-time-setup-one-time-only)
 - [Detailed Setup](#detailed-setup)
 - [Running Tests](#running-tests)
 - [Understanding Reports](#understanding-reports)
@@ -240,6 +241,69 @@ npm install
 # 3. Open TWO terminal windows (important!)
 ```
 
+### First-Time Setup (One-Time Only)
+
+If this is your **first time** running the project, you need to create a project and generate tokens:
+
+#### Step 1: Start the Server
+
+```bash
+npm run lhci:server
+```
+
+#### Step 2: Run the Wizard
+
+In a **new terminal**, run:
+
+```bash
+npx lhci wizard
+```
+
+Follow the prompts:
+
+```
+? Which wizard do you want to run? new-project
+? What is the URL of your LHCI server? http://localhost:9001
+? What would you like to name the project? My Project Name
+```
+
+#### Step 3: Save Your Tokens
+
+The wizard generates two tokens:
+
+```
+Created project My Project Name (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)!
+
+Use build token xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx to connect.
+Use admin token xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx for administrative access.
+```
+
+| Token | Purpose | Where to Save |
+|-------|---------|---------------|
+| **Build Token** | Authenticates test uploads | `lighthouserc.js` → `upload.token` |
+| **Admin Token** | Admin access to project | Save securely (e.g., `tokens.txt`) |
+
+#### Step 4: Configure the Build Token
+
+Edit `lighthouserc.js` and add your build token:
+
+```javascript
+module.exports = {
+  ci: {
+    // ... other config
+    upload: {
+      target: 'lhci',
+      serverBaseUrl: 'http://localhost:9001',
+      token: 'YOUR-BUILD-TOKEN-HERE',  // <-- Paste build token here
+    },
+  }
+};
+```
+
+> **Note:** `tokens.txt` is in `.gitignore` - safe to store admin token there locally.
+
+---
+
 ### Terminal 1: Start Dashboard
 
 ```bash
@@ -273,6 +337,8 @@ npm run lhci:carbon
 
 1. **Dashboard**: Open [http://localhost:9001](http://localhost:9001) in browser
 2. **QA Reports**: Open `carbon-reports-by-host/index.html` in browser
+
+> **First time?** If the dashboard shows "Set up a new project", follow the [First-Time Setup](#first-time-setup-one-time-only) steps above.
 
 ---
 
@@ -622,6 +688,24 @@ npx lhci server --storage.storageMethod=sql --storage.sqlDialect=sqlite --storag
 **Why:** This is normal! It's fetching authentication cookies.
 
 **Action:** Just wait for it to complete automatically.
+
+#### 7. Dashboard shows "Set up a new project"
+
+**Problem:** Opening localhost:9001 shows a blank page asking to create a project
+
+**Solution:**
+This happens when:
+- It's your first time running the server
+- The `lhci.db` database was deleted
+
+Run the wizard to create a project:
+```bash
+npx lhci wizard
+```
+
+Select `new-project`, enter your server URL (`http://localhost:9001`), and save the generated build token to `lighthouserc.js`.
+
+See [First-Time Setup](#first-time-setup-one-time-only) for detailed steps.
 
 ---
 
