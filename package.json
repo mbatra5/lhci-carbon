@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "lhci:server": "npx lhci server --storage.storageMethod=sql --storage.sqlDialect=sqlite --storage.sqlDatabasePath=./lhci.db",
     "lhci": "node run-lighthouse.js",
     "lhci:run": "node run-lighthouse.js",
     "sitespeed": "node run-sitespeed.js",

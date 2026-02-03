@@ -128,8 +128,7 @@ This tool helps you understand:
     │ 1. Start LHCI Server│
     │    (Dashboard)       │
     │                      │
-    │  npx lhci server     │
-    │  --storage.sqliteDatabasePath=lhci.db
+    │  npm run lhci:server │
     │                      │
     │  📊 Dashboard runs   │
     │  at localhost:9001   │
@@ -244,13 +243,18 @@ npm install
 ### Terminal 1: Start Dashboard
 
 ```bash
-npx lhci server --storage.sqliteDatabasePath=lhci.db
+npm run lhci:server
+```
+
+Or use the full command:
+```bash
+npx lhci server --storage.storageMethod=sql --storage.sqlDialect=sqlite --storage.sqlDatabasePath=./lhci.db
 ```
 
 You should see:
 
 ```
-@lhci/server listening on port 9001
+Server listening on port 9001
 ```
 
 ✅ **Keep this terminal running!**
@@ -324,7 +328,7 @@ The system will automatically:
 
 ```bash
 # Terminal 1 - Start dashboard (keep running)
-npx lhci server --storage.sqliteDatabasePath=lhci.db
+npm run lhci:server
 
 # Terminal 2 - Run tests + generate reports
 npm run lhci && npm run lhci:carbon
@@ -335,7 +339,7 @@ npm run lhci && npm run lhci:carbon
 #### Step 1: Start the Dashboard Server
 
 ```bash
-npx lhci server --storage.sqliteDatabasePath=lhci.db
+npm run lhci:server
 ```
 
 **What happens:**
@@ -345,7 +349,7 @@ npx lhci server --storage.sqliteDatabasePath=lhci.db
 
 **Expected output:**
 ```
-@lhci/server listening on port 9001
+Server listening on port 9001
 ```
 
 ⚠️ **Keep this terminal open!**
@@ -526,6 +530,7 @@ carbon-reports-by-host/
 
 | Script | Command | Description |
 |--------|---------|-------------|
+| `npm run lhci:server` | `npx lhci server ...` | Start the dashboard server |
 | `npm run lhci` | `node run-lighthouse.js` | Run Lighthouse tests |
 | `npm run lhci:carbon` | `node calculate-carbon.js` | Generate carbon reports |
 
@@ -562,7 +567,7 @@ npm run lhci:carbon 100000 # 100,000 views/month
 **Solution:**
 ```bash
 # Make sure dashboard is running in Terminal 1
-npx lhci server --storage.sqliteDatabasePath=lhci.db
+npm run lhci:server
 ```
 
 #### 2. "No Lighthouse data found"
@@ -597,10 +602,22 @@ npm run lhci:carbon
 lsof -ti:9001 | xargs kill -9
 
 # Restart dashboard
-npx lhci server --storage.sqliteDatabasePath=lhci.db
+npm run lhci:server
 ```
 
-#### 5. Browser window opens during tests
+#### 5. "Cannot use sqlite without a database path"
+
+**Problem:** Server fails with database path error
+
+**Solution:**
+Use the correct command syntax (newer LHCI versions):
+```bash
+npm run lhci:server
+# Or:
+npx lhci server --storage.storageMethod=sql --storage.sqlDialect=sqlite --storage.sqlDatabasePath=./lhci.db
+```
+
+#### 6. Browser window opens during tests
 
 **Why:** This is normal! It's fetching authentication cookies.
 
