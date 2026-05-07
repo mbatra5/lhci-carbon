@@ -437,8 +437,8 @@ for (const hostname of Object.keys(byHost).sort()) {
     const perfScore = (typeof rawPerf === 'number') ? Math.round(rawPerf * 100) : 'n/a';
 
     const co2Grams = co2Emission.perByte(transferBytes, false);
-    const co2PerVisit = co2Grams.toFixed(6);
-    const monthlyKg = ((co2Grams * monthlyViews) / 1000).toFixed(3);
+    const co2PerVisit = co2Grams.toFixed(2);
+    const monthlyKg = ((co2Grams * monthlyViews) / 1000).toFixed(2);
     const yearlyKg = ((co2Grams * monthlyViews * 12) / 1000).toFixed(2);
     const treesPerYear = (yearlyKg / 21).toFixed(2);
 

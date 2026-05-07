@@ -1,50 +1,51 @@
 const { chromium } = require('playwright');
-const { resolve } = require('path');
+const { parseEnvArg, loadProjectConfig, getCookiesFilePath } = require('./lib/config');
 
-async function setupCookies() {
-try {
-  console.log("Starting cookies setup...");
+async function setupCookies(cookieUrl, cookiesFilePath) {
+  if (!cookieUrl || !cookiesFilePath) {
+    const env = parseEnvArg();
+    const project = loadProjectConfig(env);
 
-  // Launch a browser instance
-  const browser = await chromium.launch({ headless: false });
-  console.log("Browser launched successfully.");
+    cookieUrl = cookieUrl || project.cookieUrl;
+    cookiesFilePath = cookiesFilePath || getCookiesFilePath(env);
+    console.log(`🌐 Setting up cookies for environment: ${env}`);
+  }
 
-  // Create a new browser context
-  const context = await browser.newContext();
-  console.log("Browser context created.");
+  try {
+    console.log('Starting cookies setup...');
 
-  // Open a new page
-  const page = await context.newPage();
-  console.log("Navigating to whitelisting IP address URL...");
-  await page.goto("https://your-site.com/auth-url");
+    const browser = await chromium.launch({ headless: false });
+    console.log('Browser launched successfully.');
 
-  // Wait for page load and allow JS to set cookies
-  await page.waitForLoadState("networkidle");
-  
-  // Debug: get and print all cookies for the current domain
-  const cookies = await context.cookies();
-  console.log("Cookies in context after wait:", cookies);
+    const context = await browser.newContext();
+    console.log('Browser context created.');
 
-  // Save storage state (cookies and session data)
-  const storagePath = resolve(__dirname, "cookies.json");
-  console.log(`Saving storage state to ${storagePath}...`);
-  await context.storageState({ path: storagePath });
-  console.log("Storage state saved successfully.");
+    const page = await context.newPage();
+    console.log(`Navigating to IP access URL: ${cookieUrl}`);
+    await page.goto(cookieUrl);
 
-  // Close the browser
-  await browser.close();
-  console.log("Browser closed.");
-} catch (error) {
-  console.error("Error during cookies setup:", error);
-  throw error;
-}
+    await page.waitForLoadState('networkidle');
+
+    const cookies = await context.cookies();
+    console.log('Cookies in context after wait:', cookies);
+
+    console.log(`Saving storage state to ${cookiesFilePath}...`);
+    await context.storageState({ path: cookiesFilePath });
+    console.log('Storage state saved successfully.');
+
+    await browser.close();
+    console.log('Browser closed.');
+  } catch (error) {
+    console.error('Error during cookies setup:', error);
+    throw error;
+  }
 }
 
 if (require.main === module) {
-setupCookies().catch((err) => {
-  console.error("Unhandled error in cookies setup:", err);
-  process.exit(1);
-});
+  setupCookies().catch((err) => {
+    console.error('Unhandled error in cookies setup:', err);
+    process.exit(1);
+  });
 }
 
 module.exports = setupCookies;

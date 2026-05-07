@@ -1,0 +1,18 @@
+{
+  "formFactor": "mobile",
+  "screenEmulation": {
+    "mobile": true,
+    "width": 360,
+    "height": 640,
+    "deviceScaleFactor": 2.625
+  },
+  "throttling": {
+    "cpuSlowdownMultiplier": 4,
+    "rttMs": 150,
+    "throughputKbps": 1638.4,
+    "requestLatencyMs": 150,
+    "downloadThroughputKbps": 1638.4,
+    "uploadThroughputKbps": 675
+  },
+  "throttlingMethod": "simulate"
+}

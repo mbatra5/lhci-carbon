@@ -1,23 +1,36 @@
 {
   "name": "lighthouse-ci",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "index.js",
   "scripts": {
+    "postinstall": "node patch-lhci-ui.js",
     "lhci:server": "npx lhci server --storage.storageMethod=sql --storage.sqlDialect=sqlite --storage.sqlDatabasePath=./lhci.db",
-    "lhci": "node run-lighthouse.js",
+    "cookies-setup": "node setup-cookies.js",
+    "cookies-import": "node scripts/import-cookies.js",
+    "lhci:run": "node run-lighthouse.js",
+    "lhci:canary": "node run-lighthouse.js --env=CANARY",
+    "lhci:prod": "node run-lighthouse.js --env=PROD",
+    "lhci:prod:desktop": "node run-lighthouse.js --env=PROD_DESKTOP",
+    "lhci:scores": "node scripts/extract-scores.js --pretty",
+    "lhci:confluence": "node scripts/update-confluence.js",
+    "lhci:confluence:attach": "node scripts/update-confluence.js --attach",
+    "sitespeed": "node run-sitespeed.js",
     "lhci:carbon": "node calculate-carbon.js",
-    "sitespeed": "node run-sitespeed.js"
+    "lhci:fetch": "node scripts/fetch-build.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Multi-environment Lighthouse CI framework with local dashboard, Confluence reporting, and carbon analysis.",
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
     "@lhci/server": "^0.15.1",
     "@tgwf/co2": "^0.16.9",
+    "cheerio": "^1.2.0",
+    "dotenv": "^17.3.1",
     "playwright": "^1.56.1",
     "sitespeed.io": "^38.5.2",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "uuid": "^13.0.0"
   }
 }

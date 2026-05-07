@@ -1,196 +1,260 @@
-# QA-Friendly Lighthouse Reporting Guide
+# QA Reporting Guide — Lighthouse Performance Reports
 
 ## Overview
 
-This Lighthouse CI project now generates **QA-friendly performance reports** with prioritized, actionable optimization opportunities. Instead of showing raw technical JSON data, the reports now display issues in plain language that QAs can easily understand and report to developers.
+This framework generates **QA-friendly performance reports** with prioritized, actionable optimization opportunities. Instead of raw technical JSON, reports display issues in plain language that QA engineers can immediately understand and report to developers.
 
-## What's New
+---
 
-### 1. **Prioritized Opportunities** 🎯
+## How to Run
 
-When you click on a URL in the carbon report, you'll now see optimization opportunities sorted by impact:
+### Step 1: Start the Dashboard
 
-- **🔴 HIGH Priority** - Issues with the biggest performance impact (top 3)
-- **🟡 MEDIUM Priority** - Moderate improvements (next 3)
-- **🟢 LOW Priority** - Nice-to-have optimizations (remaining)
+```bash
+npm run lhci:server
+```
 
-### 2. **Non-Technical Descriptions**
+Keep this terminal running.
+
+### Step 2: Run Lighthouse Tests
+
+```bash
+npm run lhci:run -- --env=CANARY
+```
+
+Replace `CANARY` with your target environment (e.g., `PROD`, `STAGING`).
+
+### Step 3: Generate Carbon & Performance Reports
+
+```bash
+npm run lhci:carbon
+```
+
+Optional — specify monthly page views (default: 10,000):
+```bash
+npm run lhci:carbon 50000
+```
+
+> **Already have data in the dashboard?** You can skip re-running Lighthouse and generate carbon reports from a past build instead — see [Generating Reports from a Past Build](#generating-reports-from-a-past-build) below.
+
+### Step 4: View Reports
+
+- **Dashboard**: Open `http://localhost:9001` in your browser
+- **Carbon Reports**: Open `carbon-reports-by-host/index.html` in your browser
+
+---
+
+## Understanding the Reports
+
+### Main Report Table
+
+The host summary page shows all tested URLs with an **Issues** column:
+
+```
+URL                    | Page Size | Perf | CO2   | Rating | Issues
+-----------------------|-----------|------|-------|--------|-------
+/page-1                | 30.46 MB  | 27   | 12.2g | Poor   | 16 (HIGH)
+/page-2                | 28.33 MB  | 31   | 11.4g | Poor   | 14 (HIGH)
+/page-3                | 24.12 MB  | 42   | 9.7g  | Fair   |  8 (MEDIUM)
+```
+
+- **Red badge** = Has HIGH priority issues
+- **Yellow badge** = Only MEDIUM/LOW priority issues
+- **Green checkmark** = Well optimized, no issues
+
+Click any URL to see the detail page.
+
+### Detail Page — Prioritized Opportunities
 
 Each opportunity shows:
-- **Title**: Clear name of the issue
-- **Description**: What the problem is in plain language
-- **Potential Savings**: How much time/data could be saved (e.g., "1.2s" or "450 KB")
-- **Action Item**: Specific instruction for what to report to developers
-
-### 3. **Issues Column in Main Report**
-
-The main report table now includes an **🎯 Issues** column showing:
-- Number of optimization opportunities per URL
-- Color-coded by severity:
-  - 🔴 Red badge = Has HIGH priority issues
-  - 🟡 Yellow badge = Only MEDIUM/LOW priority issues
-  - ✓ Green checkmark = No issues (well optimized!)
-
-## How to Use
-
-### Step 1: Run Lighthouse Tests
-
-```bash
-node run-lighthouse.js
-```
-
-This will:
-1. Fetch authentication cookies (if needed)
-2. Run Lighthouse tests on all URLs in `test-urls.json`
-3. Store results in `.lighthouseci/` folder
-
-### Step 2: Generate Carbon & Performance Reports
-
-```bash
-node calculate-carbon.js
-```
-
-Optional: Specify monthly views (default is 10,000):
-```bash
-node calculate-carbon.js 50000
-```
-
-This generates HTML reports in `carbon-reports-by-host/`
-
-### Step 3: View Reports
-
-Open `carbon-reports-by-host/index.html` in your browser.
-
-1. **Main Index** - Lists all hosts tested
-2. **Host Report** - Shows all URLs for a host with performance metrics and issue counts
-3. **Detail Page** - Click any URL to see prioritized opportunities
-
-## Example Opportunities
-
-### High Priority Example
 
 ```
-🔴 HIGH | Eliminate render-blocking resources | 💰 Save: 1.2s
+HIGH | Minimize main-thread work | Potential savings: 7.1s
 
-Description: Resources are blocking the first paint of your page. Consider 
-delivering critical JS/CSS inline and deferring all non-critical resources.
+Consider reducing the time spent parsing, compiling and executing JS.
+You may find delivering smaller JS payloads helps with this.
 
-📋 What to report to dev: Ask dev to defer non-critical CSS/JS or move 
-scripts to bottom of page. This will improve initial page load time.
+What to report to dev:
+Request optimizing JavaScript that blocks the main thread.
+This causes slow interactions.
 ```
 
-### Medium Priority Example
+### Priority Levels
 
-```
-🟡 MEDIUM | Remove unused JavaScript | 💰 Save: 450 KB
+| Priority | Criteria | Action |
+|----------|----------|--------|
+| HIGH | Top 3 by impact | Fix immediately |
+| MEDIUM | Next 3 by impact | Fix soon |
+| LOW | Remaining | Nice to have |
 
-Description: Remove unused JavaScript to reduce bytes consumed by network activity.
+### Scope Indicators
 
-📋 What to report to dev: Request removal of unused JavaScript code or 
-implement lazy-loading for code that's not immediately needed.
-```
+| Scope | Meaning | How to Report |
+|-------|---------|---------------|
+| GLOBAL | Affects 50%+ of pages | Report once — it's an infrastructure issue |
+| LOCAL | Affects <50% of pages | Report per affected page |
+
+---
 
 ## Creating Bug Reports
 
-When you find performance issues, create a bug with:
-
-1. **URL**: The page URL from the report
-2. **Priority**: Use the badge color (🔴 HIGH, 🟡 MEDIUM, 🟢 LOW)
-3. **Issue**: Copy the opportunity title
-4. **Potential Savings**: Copy the savings value
-5. **Action Needed**: Copy the "What to report to dev" text
-6. **Screenshot**: Attach screenshot from the detail page
-
-### Example Bug Template
+When you find performance issues, use this template:
 
 ```
-Title: [PERFORMANCE] Eliminate render-blocking resources on /qa-modal
+Title: [PERFORMANCE] {Issue title} on {page path}
 
-Priority: HIGH 🔴
+Priority: {HIGH / MEDIUM / LOW}
+Potential Savings: {time or bytes from the report}
+
+Description:
+{Copy the description from the report}
+
+Action Required:
+{Copy the "What to report to dev" text}
+
+Environment: {CANARY / PROD / etc.}
+URL: {full page URL}
+Report: {attach screenshot of the detail page}
+```
+
+### Example
+
+```
+Title: [PERFORMANCE] Eliminate render-blocking resources on /page-1
+
+Priority: HIGH
 Potential Savings: 1.2 seconds
 
 Description:
 Resources are blocking the first paint of the page, causing slow initial load.
 
 Action Required:
-Defer non-critical CSS/JS or move scripts to bottom of page to improve 
-initial page load time.
+Ask dev to defer non-critical CSS/JS or move scripts to bottom of page
+to improve initial page load time.
 
-URL: https://example.com/page-name
-Report: [attach screenshot]
+Environment: CANARY
+URL: https://example.com/page-1
+Report: [screenshot attached]
 ```
 
-## Tips for QAs
+---
 
-1. **Focus on HIGH priority issues first** - These have the biggest impact
-2. **Sort by Issues column** - Click the 🎯 Issues header to find pages with most problems
-3. **Check the "Potential Savings"** - Prioritize issues with largest time/size savings
-4. **Group similar issues** - If multiple pages have the same issue, report them together
-5. **Use the raw data** - Click "View raw Lighthouse data" if devs need technical details
+## Common Opportunity Types
 
-## Opportunity Types Explained
-
-| Opportunity | What It Means | Impact |
-|-------------|---------------|--------|
+| Opportunity | What It Means | Typical Impact |
+|-------------|---------------|----------------|
 | Render-blocking resources | CSS/JS files loading before page content shows | High |
 | Unused JavaScript | Code downloaded but never executed | High |
 | Unused CSS | Styles downloaded but never used | Medium |
 | Modern image formats | Using old JPEG/PNG instead of WebP/AVIF | Medium |
 | Offscreen images | All images load immediately, even below fold | Medium |
-| Unminified files | Files contain whitespace/comments | Low |
+| Unminified files | Files contain unnecessary whitespace/comments | Low |
 | Long cache TTL | Browser doesn't cache files for repeat visits | Low |
 | DOM size | Too many HTML elements on the page | High |
-
-## Technical Details
-
-### Files Modified
-
-- `calculate-carbon.js` - Added opportunity extraction and formatting logic
-- `templates/detail.html` - Updated to show prioritized opportunities
-- `templates/host-index.html` - Added Issues column to table
-- `templates/host-row.html` - Added opportunities badge to rows
-
-### Opportunity Prioritization Logic
-
-1. Calculate impact score: `(1 - audit.score) * 100`
-2. Sort by impact score (descending)
-3. Secondary sort by potential savings value
-4. Assign priority:
-   - Top 3 = HIGH (🔴)
-   - Next 3 = MEDIUM (🟡)
-   - Rest = LOW (🟢)
-
-### Supported Audits
-
-The report extracts 25+ performance audits including:
-- Resource optimization (blocking, unused, compression)
-- Image optimization (formats, lazy-loading, sizing)
-- JavaScript optimization (execution time, main-thread work)
-- Caching and network efficiency
-- DOM and third-party script impact
-
-## Troubleshooting
-
-**Q: No opportunities showing**
-- Great! The page is well optimized
-
-**Q: Too many LOW priority issues**
-- Focus on HIGH/MEDIUM first, LOW can be addressed later
-
-**Q: Need technical details**
-- Click "View raw Lighthouse data" at bottom of detail page
-
-**Q: Savings seem high**
-- Lighthouse shows theoretical maximum savings; actual results may vary
-
-## Next Steps
-
-1. Run regular Lighthouse tests (weekly recommended)
-2. Track issue count over time
-3. Celebrate when HIGH priority issues are fixed! 🎉
-4. Compare before/after performance scores
+| Main-thread work | Excessive JavaScript execution blocking interactions | High |
+| Third-party scripts | External scripts impacting performance | Medium |
 
 ---
 
-**Questions or Feedback?**
-Contact: Madhur Batra or your QA Lead
+## Tips
+
+1. **Focus on HIGH priority issues first** — they have the biggest performance impact
+2. **Sort by Issues column** — click the header to find pages with the most problems
+3. **Check potential savings** — prioritize issues with the largest time/size savings
+4. **Group similar issues** — if multiple pages share the same issue, report them together as a single ticket
+5. **Use raw data if needed** — click "View raw Lighthouse data" at the bottom of a detail page for technical details
+6. **Compare runs** — use the LHCI dashboard at `localhost:9001` to compare before/after scores
+
+---
+
+## Troubleshooting
+
+**No opportunities showing?**
+The page is well optimized — no action needed.
+
+**Too many LOW priority issues?**
+Focus on HIGH/MEDIUM first. LOW issues can be addressed in later sprints.
+
+**Savings seem unrealistically high?**
+Lighthouse shows theoretical maximum savings. Actual results depend on implementation.
+
+**Need the raw Lighthouse data?**
+Click "View raw Lighthouse data" at the bottom of any detail page, or find JSON files in `.lighthouseci/`.
+
+---
+
+---
+
+## Generating Reports from a Past Build
+
+If Lighthouse tests have already been run and uploaded to the dashboard, you can generate carbon reports from **any historical build** without re-running Lighthouse. This is useful for:
+
+- Comparing carbon footprint across builds without triggering a new run
+- Analysing a specific release build after the fact
+- Generating reports when you don't have access to the environment right now
+
+### Step 1: Make sure the dashboard server is running
+
+```bash
+npm run lhci:server
+```
+
+### Step 2: List available builds
+
+```bash
+npm run lhci:fetch -- --env=PROD --list
+```
+
+Output:
+
+```
+📋 Builds for "prod" (newest first):
+
+  #  Build ID (use with --build=)              Run ID                 Date
+  ─  ────────────────────────────────────────  ─────────────────────  ────────────────────
+  1  3a7f91b2c5d1...                            abc123...              7 May 2026, 18:32
+  2  9c2e44a1f8b0...                            def456...              6 May 2026, 10:14
+```
+
+### Step 3: Fetch that build's data
+
+Copy the build ID from the list and pass it with `--build=`:
+
+```bash
+npm run lhci:fetch -- --env=PROD --build=3a7f91b2c5d1
+```
+
+This downloads all the LHR JSON files for that build into `.lighthouseci/` (replacing any existing files there).
+
+### Step 4: Generate carbon reports as normal
+
+```bash
+npm run lhci:carbon
+```
+
+Open `carbon-reports-by-host/index.html` to view the reports.
+
+---
+
+## Workflow Summary
+
+### Fresh run
+
+```
+1. npm run lhci:server                    # Start dashboard (keep running)
+2. npm run lhci:run -- --env=CANARY       # Run tests
+3. npm run lhci:carbon                    # Generate reports
+4. Open carbon-reports-by-host/index.html
+5. File bugs for HIGH priority issues
+6. Track progress in the dashboard over time
+```
+
+### From a historical build
+
+```
+1. npm run lhci:server                                    # Start dashboard (keep running)
+2. npm run lhci:fetch -- --env=CANARY --list              # Find the build you want
+3. npm run lhci:fetch -- --env=CANARY --build=<id>        # Fetch its LHR data
+4. npm run lhci:carbon                                    # Generate reports
+5. Open carbon-reports-by-host/index.html
+```

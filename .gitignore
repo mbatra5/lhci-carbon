@@ -3,7 +3,12 @@ node_modules
 carbon-reports-by-host
 sitespeed-results
 .lighthouserc.tmp.js
-cookies.json
+.lighthouserc.tmp.json
+cookies-*.json
 tokens.txt
 lhci.db
 .DS_Store
+.env
+.cursor/
+urls
+projects-config.json

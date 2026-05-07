@@ -1,205 +1,206 @@
-# QA-Friendly Lighthouse Reporting - Feature Summary
+# Feature Summary
 
-## ✅ Completed
+## Multi-Environment Lighthouse CI Framework (v2.0)
 
-Successfully implemented QA-friendly Lighthouse performance reporting with prioritized, actionable optimization opportunities.
-
-## 🎯 Problem Solved
-
-**Before**: Clicking on URLs in the Lighthouse CI report showed raw, unreadable JSON data that QAs couldn't understand or act upon.
-
-**After**: URLs now open detail pages with:
-- Clear, prioritized list of performance issues
-- Non-technical descriptions
-- Actionable "What to report to dev" instructions
-- Visual priority indicators (🔴 HIGH, 🟡 MEDIUM, 🟢 LOW)
-- Potential savings for each optimization
-
-## 🚀 Key Features
-
-### 1. **Smart Prioritization**
-- Opportunities automatically sorted by performance impact
-- Top 3 marked as 🔴 HIGH priority
-- Next 3 marked as 🟡 MEDIUM priority
-- Remaining marked as 🟢 LOW priority
-
-### 2. **QA-Friendly Language**
-Each opportunity includes:
-```
-🔴 HIGH | Reduce unused JavaScript | 💰 Save: 1,052 KB
-
-Description: Reduce unused JavaScript and defer loading scripts 
-until they are required to decrease bytes consumed by network activity.
-
-📋 What to report to dev: Request removal of unused JavaScript code 
-or implement lazy-loading for code that's not immediately needed.
-```
-
-### 3. **Main Report Table Enhancement**
-Added **🎯 Issues** column showing:
-- 🔴 16 = Has HIGH priority issues (16 total)
-- 🟡 5 = Only MEDIUM/LOW issues (5 total)
-- ✓ 0 = No issues (well optimized)
-
-Sortable by clicking column header.
-
-### 4. **25+ Optimization Types Covered**
-Including:
-- Render-blocking resources
-- Unused JavaScript/CSS
-- Image optimization (formats, lazy-loading, sizing)
-- JavaScript execution time
-- Main thread work
-- Third-party scripts
-- DOM size
-- Caching
-- Compression
-- And more...
-
-## 📊 Visual Examples
-
-### Main Report Table
-```
-URL                                    | Page Size | Perf | CO₂  | Rating | 🎯 Issues
----------------------------------------|-----------|------|------|--------|----------
-/qa-modal                             | 30.46 MB  | 27   | 12.2 | Poor   | 🔴 16
-/qa-modal/hero-primary-static         | 28.33 MB  | 31   | 11.4 | Poor   | 🔴 14
-/qa-modal/qa-filter-tile-list         | 24.12 MB  | 42   | 9.7  | Fair   | 🟡 8
-```
-
-### Detail Page - HIGH Priority Example
-```
-┌─────────────────────────────────────────────────────────────┐
-│ 🔴 HIGH                                                      │
-│ Minimize main-thread work                                   │
-│ 💰 Potential savings: 7.1 s                                 │
-│                                                              │
-│ Consider reducing the time spent parsing, compiling and     │
-│ executing JS. You may find delivering smaller JS payloads   │
-│ helps with this.                                            │
-│                                                              │
-│ 📋 What to report to dev:                                   │
-│ Request optimizing JavaScript that blocks the main thread.  │
-│ This causes slow interactions.                              │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 📁 Files Modified
-
-1. **calculate-carbon.js** (+174 lines)
-   - Added `extractOpportunities()` function
-   - Added `generateActionableSteps()` function
-   - Added `generateOpportunitiesHTML()` function
-   - Updated detail page generation logic
-
-2. **templates/detail.html** (+43 lines)
-   - Added opportunities section styles
-   - Replaced raw JSON with prioritized opportunities
-   - Moved JSON to collapsible "View raw data" section
-
-3. **templates/host-index.html** (+5 lines)
-   - Added "🎯 Issues" column header
-   - Updated JavaScript sorting logic
-
-4. **templates/host-row.html** (+1 line)
-   - Added opportunities badge cell
-
-5. **QA-REPORTING-GUIDE.md** (new file)
-   - Comprehensive guide for QA teams
-   - Usage instructions
-   - Bug report template
-   - Troubleshooting tips
-
-## 🔧 Technical Implementation
-
-### Opportunity Scoring Algorithm
-```javascript
-impactScore = (1 - auditScore) * 100
-```
-
-Sorted by:
-1. Impact score (descending)
-2. Potential savings value (descending)
-
-### Priority Assignment
-- Indices 0-2: HIGH (🔴)
-- Indices 3-5: MEDIUM (🟡)
-- Indices 6+: LOW (🟢)
-
-### Badge Generation
-```javascript
-if (opportunities.length === 0) {
-  badge = "✓ 0" (green)
-} else if (hasHighPriority) {
-  badge = "🔴 {count}" (red)
-} else {
-  badge = "🟡 {count}" (yellow)
-}
-```
-
-## 🎨 Design Principles
-
-1. **Color-Coded Priorities**: Visual hierarchy using red/yellow/green
-2. **Scannable**: Clear headers, spacing, and badges
-3. **Actionable**: Every opportunity has "What to report" instruction
-4. **Non-Technical**: Plain language, not technical jargon
-5. **Impact-First**: Most important issues shown first
-
-## 📈 Benefits for QA Teams
-
-1. ✅ **Easy to understand** - No technical knowledge needed
-2. ✅ **Fast prioritization** - Focus on high-impact issues first
-3. ✅ **Clear bug reports** - Copy-paste action items directly
-4. ✅ **Visual indicators** - Quickly identify problematic pages
-5. ✅ **Time savings** - No need to decode technical JSON
-6. ✅ **Better collaboration** - Clear communication with developers
-
-## 🧪 Testing
-
-Tested with:
-- Multiple URLs tested across the site
-- Various performance scores (27-42)
-- Different opportunity counts (8-16 per page)
-
-Results:
-- ✅ All opportunities extracted correctly
-- ✅ Priorities assigned accurately
-- ✅ Badges displaying in main table
-- ✅ Detail pages rendering properly
-- ✅ Sorting working on all columns
-
-## 📦 Git Branch
-
-**Branch**: `feature/qa-friendly-lighthouse-reports`
-
-**Commits**:
-1. `421b189` - Update test URLs and configuration
-2. `d6ed074` - Add QA-friendly Lighthouse opportunities report
-3. `d7d2334` - Add comprehensive QA reporting guide
-
-**Changes**: +427 lines across 8 files
-
-## 🚀 Next Steps
-
-1. ✅ Review the reports in browser (already opened)
-2. ⏭️ Test with QA team
-3. ⏭️ Gather feedback on language/priorities
-4. ⏭️ Merge to main branch
-5. ⏭️ Document in project wiki
-6. ⏭️ Train QA team on new format
-
-## 📚 Documentation
-
-- **QA-REPORTING-GUIDE.md** - Comprehensive guide for QA teams
-- **FEATURE-SUMMARY.md** - This file (technical summary)
-- **Lighthouse-phase1.md** - Original project setup notes
-
-## 🙋‍♂️ Questions?
-
-Contact: Madhur Batra
+A modular, multi-environment performance testing framework that combines Lighthouse CI audits, carbon footprint analysis, and Confluence score publishing — all controlled via a single `--env` flag.
 
 ---
 
-**Status**: ✅ Feature Complete and Ready for Review
-**Date**: January 30, 2026
-**Branch**: feature/qa-friendly-lighthouse-reports
+## Core Features
+
+### 1. Multi-Environment Support
+
+Run Lighthouse tests against any number of target environments from a single codebase:
+
+```bash
+npm run lhci:run -- --env=CANARY
+npm run lhci:run -- --env=PROD
+```
+
+All environment configuration lives in `projects-config.json` — URLs, LHCI tokens, cookie setup, and Confluence targets.
+
+### 2. Dual Cookie Authentication
+
+- **Automated**: Playwright navigates to an IP-access page and captures session cookies (for whitelisted environments)
+- **Manual**: Supports browser-exported cookie files for environments with CloudFront signed cookies or other external auth
+
+The runner automatically selects the right approach based on `cookieUrl` in the config.
+
+### 3. Local LHCI Dashboard
+
+A local SQLite-backed dashboard at `http://localhost:9001` stores all historical runs, enabling:
+- Score trend tracking across builds
+- Side-by-side comparisons between runs
+- Pass/fail assertions based on `lighthouse:recommended` preset
+- Responsive UI (custom CSS patch for long-URL layouts)
+
+### 4. Carbon Footprint Reports
+
+`calculate-carbon.js` processes raw Lighthouse JSON and generates a suite of HTML reports:
+- Per-page carbon footprint (CO2 grams per visit)
+- Sustainability ratings
+- Monthly emission projections
+- Global vs local issue classification
+- Prioritized QA-friendly optimization opportunities
+
+### 5. QA-Friendly Opportunity Reports
+
+Each page detail report replaces raw JSON with a prioritized list:
+
+| Priority | Criteria | Visual |
+|----------|----------|--------|
+| HIGH | Top 3 by impact | Red badge |
+| MEDIUM | Next 3 | Yellow badge |
+| LOW | Remaining | Green badge |
+
+Every opportunity includes:
+- Plain-English description
+- Potential savings (time or bytes)
+- "What to report to dev" action item
+
+### 6. Confluence Score Publishing
+
+Automatically adds a new column to a Confluence tracking table with scores from the latest run:
+
+```bash
+npm run lhci:confluence -- --env=CANARY
+npm run lhci:confluence:attach -- --env=CANARY  # also uploads LHR JSON files
+```
+
+Supports dry-run mode (`--dry-run`) for previewing changes.
+
+### 7. Responsive Dashboard Patch
+
+`patch-lhci-ui.js` injects custom CSS into the LHCI server UI via a `postinstall` hook:
+- Prevents long-URL horizontal overflow
+- Media queries adjust layout at four breakpoints (1200px, 900px, 600px, <600px)
+- Dropdowns stack vertically on small screens
+- Score gauges wrap on mobile
+
+### 8. Per-Build Carbon Reports (lhci:fetch)
+
+`scripts/fetch-build.js` lets you generate carbon reports from **any historical build** stored in the LHCI dashboard — without re-running Lighthouse:
+
+```bash
+# List all builds for an environment
+npm run lhci:fetch -- --env=PROD --list
+
+# Fetch a specific build's LHR files into .lighthouseci/
+npm run lhci:fetch -- --env=PROD --build=<build-id>
+
+# Then generate carbon reports as normal
+npm run lhci:carbon
+```
+
+The script:
+- Queries the LHCI server API to find the project matching `--env`
+- Lists available builds with dates and IDs (supports partial ID prefix matching)
+- Clears existing LHR files from `.lighthouseci/` and replaces them with the selected build's data
+- Prints a `npm run lhci:carbon` reminder on completion
+
+### 9. Browser Cookie Import
+
+`scripts/import-cookies.js` converts a raw Chrome/browser cookie export into Playwright `storageState` format:
+
+```bash
+# Paste raw export into cookies-import.template.json, then:
+npm run cookies-import -- --env=PROD
+
+# Or point at a specific file:
+npm run cookies-import -- --env=PROD --input=my-export.json
+```
+
+Accepts both raw JSON arrays and existing Playwright `storageState` objects. Writes output to `cookies-{env}.json`.
+
+---
+
+## Architecture
+
+### Shared Libraries
+
+Common utilities extracted to `lib/` to eliminate duplication:
+
+| Module | Exports |
+|--------|---------|
+| `lib/config.js` | `parseEnvArg()`, `loadProjectConfig()`, `getCookiesFilePath()`, `getProjectRoot()` |
+| `lib/cookies.js` | `readCookiesFromFile()`, `getAuthCookies()` |
+
+### Script Responsibilities
+
+| Script | Role |
+|--------|------|
+| `run-lighthouse.js` | Orchestrate cookie fetching, temp config generation, and `lhci autorun` |
+| `setup-cookies.js` | Playwright-based cookie capture for automated environments |
+| `scripts/extract-scores.js` | Parse `.lighthouseci/lhr-*.json` into score summaries |
+| `scripts/update-confluence.js` | Publish scores to a Confluence table |
+| `scripts/fetch-build.js` | Fetch historical build LHR files from the LHCI server API |
+| `scripts/import-cookies.js` | Convert raw browser cookie export to Playwright `storageState` format |
+| `calculate-carbon.js` | Generate carbon footprint HTML reports |
+| `patch-lhci-ui.js` | Inject responsive CSS into LHCI dashboard |
+
+---
+
+## Configuration
+
+### projects-config.json
+
+Central source of truth for all environments:
+
+```json
+{
+  "ENV_NAME": {
+    "urlFile": "./urls/env-urls.json",
+    "cookieUrl": "https://your-site.example.com/ip-access",
+    "lhciToken": "build-token-from-lhci-wizard",
+    "serverBaseUrl": "http://localhost:9001",
+    "confluence": {
+      "pageId": "page-id",
+      "spaceId": "space-id",
+      "baseUrl": "https://your-instance.atlassian.net",
+      "tableLocalId": "table-local-id"
+    }
+  }
+}
+```
+
+### Adding a New Environment
+
+1. Create `urls/{env}-urls.json`
+2. Run `npx lhci wizard` to register a new LHCI project
+3. Add the entry to `projects-config.json`
+4. Done — all scripts pick it up via `--env`
+
+---
+
+## Technical Notes
+
+### Temp Config Generation
+
+`run-lighthouse.js` builds a `.lighthouserc.tmp.json` at runtime (pure JSON, no JS evaluation). This avoids the security concerns of writing executable `.js` config files and is auto-cleaned after the run.
+
+### Cookie Handling Flow
+
+```
+Is there a cached cookie file?
+  ├── Yes, age < 1 hour --> use it
+  ├── Yes, age >= 1 hour
+  │   ├── cookieUrl set --> re-fetch via Playwright
+  │   └── cookieUrl null --> use stale file (manual refresh required)
+  └── No file found
+      ├── cookieUrl set --> fetch via Playwright
+      └── cookieUrl null --> warn and continue without cookies
+```
+
+### Opportunity Scoring
+
+```
+impactScore = (1 - audit.score) * 100
+```
+
+Sorted by impact descending, then by potential savings. Priority assigned positionally (top 3 = HIGH, next 3 = MEDIUM, remainder = LOW).
+
+---
+
+## Status
+
+**v2.0** — Multi-environment support complete. Modular architecture with shared `lib/`, generic npm scripts, responsive dashboard, per-build carbon report fetching, and browser cookie import utility.

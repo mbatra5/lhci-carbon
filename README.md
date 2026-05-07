@@ -1,6 +1,6 @@
-# Lighthouse CI - Performance & Carbon Footprint Testing
+# Lighthouse CI - Multi-Environment Performance & Carbon Footprint Testing
 
-A comprehensive performance testing solution that combines **Google Lighthouse** audits with **carbon footprint analysis** to help teams identify and fix performance issues while tracking environmental impact.
+A comprehensive performance testing solution that combines **Google Lighthouse** audits with **carbon footprint analysis**, historical tracking via a local dashboard, and optional **Confluence reporting**.
 
 ---
 
@@ -11,12 +11,13 @@ A comprehensive performance testing solution that combines **Google Lighthouse**
 - [Architecture](#architecture)
 - [How It Works](#how-it-works)
 - [Prerequisites](#prerequisites)
-- [Quick Start Guide](#quick-start-guide)
-  - [First-Time Setup](#first-time-setup-one-time-only)
-- [Detailed Setup](#detailed-setup)
+- [Quick Start](#quick-start)
+- [Multi-Environment Setup](#multi-environment-setup)
 - [Running Tests](#running-tests)
 - [Understanding Reports](#understanding-reports)
-- [Configuration](#configuration)
+- [Confluence Integration](#confluence-integration)
+- [Configuration Reference](#configuration-reference)
+- [Project Structure](#project-structure)
 - [Troubleshooting](#troubleshooting)
 - [FAQ](#faq)
 
@@ -26,18 +27,25 @@ A comprehensive performance testing solution that combines **Google Lighthouse**
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                     LIGHTHOUSE CI + CARBON REPORTING                        │
+│              LIGHTHOUSE CI + CARBON REPORTING + CONFLUENCE                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   📊 Performance Scores    +    🌍 Carbon Footprint    +    🎯 QA Reports  │
 │                                                                             │
 │   • Page load times            • CO₂ per page view        • Prioritized    │
-│   • Core Web Vitals            • Monthly emissions         issues          │
-│   • Resource analysis          • Tree offset calc         • Global vs      │
-│   • Opportunities              • Sustainability            Local issues    │
-│                                  ratings                                    │
+│   • Core Web Vitals            • Monthly emissions           issues        │
+│   • Resource analysis          • Sustainability            • Global vs     │
+│   • Opportunities                ratings                     Local issues  │
+│                                                                             │
+│   🌐 Multi-Environment     +    📝 Confluence Publishing                   │
+│                                                                             │
+│   • CANARY / PROD / any        • Auto-update tracking tables               │
+│   • Single --env flag          • Score attachments per run                 │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+All commands support a `--env` flag to target different environments (e.g., staging, production) from a single codebase.
 
 ---
 
@@ -55,11 +63,13 @@ This tool helps you understand:
 ### For Technical Users 👨‍💻
 
 - Automated Lighthouse CI audits with historical tracking
+- Multi-environment support via a single `--env` flag and `projects-config.json`
 - Dashboard for comparing runs over time
 - Custom assertions based on performance budgets
 - Carbon footprint calculations using `@tgwf/co2` model
-- Authentication support via Playwright cookies
+- Authentication support via Playwright cookies (automated or manually exported)
 - QA-friendly reports with actionable remediation guidance
+- Confluence integration for auto-publishing scores and attachments
 
 ---
 
@@ -67,46 +77,53 @@ This tool helps you understand:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                           LIGHTHOUSE CI ARCHITECTURE                          │
+│                         LIGHTHOUSE CI ARCHITECTURE                           │
 └──────────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│                 │     │                 │     │                 │
-│  TEST URLS      │     │   LIGHTHOUSE    │     │   LHCI SERVER   │
-│  (test-urls.    │────▶│   CI CLI        │────▶│   (Dashboard)   │
-│   json)         │     │                 │     │   :9001         │
-│                 │     │                 │     │                 │
-└─────────────────┘     └────────┬────────┘     └─────────────────┘
-                                 │
-                                 │ JSON Reports
-                                 ▼
-                        ┌─────────────────┐
-                        │                 │
-                        │  .lighthouseci/ │
-                        │  (Raw Reports)  │
-                        │                 │
-                        └────────┬────────┘
-                                 │
-                                 │ Process
-                                 ▼
-                        ┌─────────────────┐
-                        │                 │
-                        │  calculate-     │
-                        │  carbon.js      │
-                        │                 │
-                        └────────┬────────┘
-                                 │
-        ┌────────────────────────┼────────────────────────┐
-        │                        │                        │
-        ▼                        ▼                        ▼
-┌───────────────┐      ┌────────────────┐      ┌────────────────┐
-│               │      │                │      │                │
-│  Carbon       │      │  QA-Friendly   │      │  Global/Local  │
-│  Footprint    │      │  Opportunities │      │  Issue         │
-│  Reports      │      │  Reports       │      │  Analysis      │
-│               │      │                │      │                │
-└───────────────┘      └────────────────┘      └────────────────┘
+┌──────────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│                      │     │                 │     │                 │
+│  projects-config.json│     │   LIGHTHOUSE    │     │   LHCI SERVER   │
+│  (env → token, URLs, │────▶│   CI CLI        │────▶│   (Dashboard)   │
+│   cookies, confluence│     │                 │     │   :9001         │
+│                      │     │                 │     │                 │
+└──────────────────────┘     └────────┬────────┘     └─────────────────┘
+          │                           │
+          │  urls/                    │ JSON Reports
+          │  canary-urls.json         ▼
+          │  prod-urls.json  ┌─────────────────┐
+          └─────────────────▶│                 │
+                             │  .lighthouseci/ │
+                             │  (Raw Reports)  │
+                             │                 │
+                             └────────┬────────┘
+                                      │
+                                      │ Process
+                                      ▼
+                             ┌─────────────────┐
+                             │                 │
+                             │  calculate-     │
+                             │  carbon.js      │
+                             │                 │
+                             └────────┬────────┘
+                                      │
+           ┌──────────────────────────┼───────────────────────┐
+           │                          │                       │
+           ▼                          ▼                       ▼
+┌──────────────────┐      ┌────────────────────┐   ┌────────────────────┐
+│                  │      │                    │   │                    │
+│  Carbon          │      │  QA-Friendly       │   │  Confluence        │
+│  Footprint       │      │  Opportunities     │   │  Table Update      │
+│  Reports         │      │  & Global/Local    │   │  (scores +         │
+│                  │      │  Issue Analysis    │   │   attachments)     │
+└──────────────────┘      └────────────────────┘   └────────────────────┘
 ```
+
+### Key Design Decisions
+
+- **Environment-first**: Every command accepts `--env=ENV` to select the target environment. No hardcoded URLs or tokens.
+- **Shared lib/**: Common utilities (`lib/config.js`, `lib/cookies.js`) eliminate duplication across scripts.
+- **JSON temp config**: The LHCI config is generated as `.lighthouserc.tmp.json` (safe, no code injection) and auto-deleted after each run.
+- **Dual cookie support**: Supports both Playwright-automated cookie capture (for IP-whitelisted environments) and manually-exported browser cookies (for environments using CloudFront signed cookies).
 
 ---
 
@@ -142,13 +159,21 @@ This tool helps you understand:
                │                         │ 2. Run Lighthouse   │
                │                         │    Tests            │
                │                         │                     │
-               │                         │  npm run lhci       │
-               │                         │                     │
+               │                         │  npm run lhci:run   │
+               │                         │  -- --env=PROD      │
                │                         └──────────┬──────────┘
                │                                    │
                │                                    ▼
                │                         ┌─────────────────────┐
-               │                         │ 3. Auto-fetch       │
+               │                         │ 3. Load env config  │
+               │                         │    from             │
+               │                         │    projects-config  │
+               │                         │    .json            │
+               │                         └──────────┬──────────┘
+               │                                    │
+               │                                    ▼
+               │                         ┌─────────────────────┐
+               │                         │ 4. Auto-fetch       │
                │                         │    Cookies          │
                │                         │    (if needed)      │
                │                         │                     │
@@ -158,18 +183,17 @@ This tool helps you understand:
                │                                    │
                │                                    ▼
                │                         ┌─────────────────────┐
-               │                         │ 4. Lighthouse       │
+               │                         │ 5. Lighthouse       │
                │                         │    Runs on Each URL │
                │                         │                     │
-               │                         │  🔍 Testing...      │
-               │         ◄───────────────│  URL 1 of N         │
-               │         Results sent    │  URL 2 of N         │
-               │         to dashboard    │  ...                │
+               │         ◄───────────────│  🔍 Testing...      │
+               │         Results sent    │  URL 1 of N         │
+               │         to dashboard    │  URL 2 of N  ...    │
                │                         └──────────┬──────────┘
                │                                    │
                ▼                                    ▼
     ┌─────────────────────┐              ┌─────────────────────┐
-    │                     │              │ 5. JSON Reports     │
+    │                     │              │ 6. JSON Reports     │
     │  View Results in    │              │    Saved to         │
     │  Dashboard          │              │    .lighthouseci/   │
     │                     │              │                     │
@@ -178,307 +202,253 @@ This tool helps you understand:
     └─────────────────────┘                         │
                                                     ▼
                                          ┌─────────────────────┐
-                                         │ 6. Generate Carbon  │
+                                         │ 7. Generate Carbon  │
                                          │    Reports          │
                                          │                     │
                                          │  npm run lhci:carbon│
-                                         │                     │
                                          └──────────┬──────────┘
                                                     │
                                                     ▼
                                          ┌─────────────────────┐
-                                         │ 7. View HTML        │
-                                         │    Reports          │
+                                         │ 8. Publish to       │
+                                         │    Confluence       │
+                                         │    (optional)       │
                                          │                     │
-                                         │  📂 Open            │
-                                         │  carbon-reports-by- │
-                                         │  host/index.html    │
-                                         └─────────────────────┘
+                                         │  npm run            │
+                                         │  lhci:confluence    │
+                                         │  -- --env=PROD      │
+                                         └──────────┬──────────┘
                                                     │
                                                     ▼
-                                                  DONE
+                                                  DONE ✅
+
+     ALTERNATIVE: Carbon Reports from a Historical Build
+     ────────────────────────────────────────────────────
+
+                                         ┌─────────────────────┐
+                                         │ A. List builds in   │
+                                         │    the dashboard    │
+                                         │                     │
+                                         │  npm run lhci:fetch │
+                                         │  -- --env=PROD      │
+                                         │     --list          │
+                                         └──────────┬──────────┘
+                                                    │
+                                                    ▼
+                                         ┌─────────────────────┐
+                                         │ B. Fetch a specific │
+                                         │    build's LHRs     │
+                                         │    into             │
+                                         │    .lighthouseci/   │
+                                         │                     │
+                                         │  npm run lhci:fetch │
+                                         │  -- --env=PROD      │
+                                         │     --build=<id>    │
+                                         └──────────┬──────────┘
+                                                    │
+                                                    ▼
+                                         ┌─────────────────────┐
+                                         │ C. Generate carbon  │
+                                         │    reports as       │
+                                         │    normal           │
+                                         │                     │
+                                         │  npm run lhci:carbon│
+                                         └──────────┬──────────┘
+                                                    │
+                                                    ▼
+                                                  DONE ✅
 ```
 
 ---
 
 ## Prerequisites
 
-### Required Software
-
-| Software | Version | Purpose | Installation |
-|----------|---------|---------|--------------|
-| **Node.js** | v18+ | JavaScript runtime | [Download](https://nodejs.org/) |
-| **npm** | v9+ | Package manager | Comes with Node.js |
-| **Chrome** | Latest | Browser for Lighthouse | [Download](https://www.google.com/chrome/) |
-
-### Verify Installation
-
-Open Terminal and run:
+| Software | Version | Purpose |
+|----------|---------|---------|
+| **Node.js** | v18+ | JavaScript runtime |
+| **npm** | v9+ | Package manager |
+| **Chrome** | Latest | Browser for Lighthouse |
 
 ```bash
-# Check Node.js version
-node --version
-# Expected: v18.x.x or higher
-
-# Check npm version  
-npm --version
-# Expected: 9.x.x or higher
+node --version  # v18.x.x or higher
+npm --version   # 9.x.x or higher
 ```
 
 ---
 
-## Quick Start Guide
-
-### 🚀 5-Minute Setup
+## Quick Start
 
 ```bash
-# 1. Clone/navigate to the project
-cd Lighthouse-CI
-
-# 2. Install dependencies
+# 1. Install dependencies
 npm install
 
-# 3. Open TWO terminal windows (important!)
-```
+# 2. Set up your environment config
+cp projects-config.example.json projects-config.json
+#    Fill in your URLs, LHCI tokens, and Confluence details
 
-### First-Time Setup (One-Time Only)
+# 3. Create URL files for each environment
+#    e.g. urls/canary-urls.json and urls/prod-urls.json
+#    See the Multi-Environment Setup section below for the format
 
-If this is your **first time** running the project, you need to create a project and generate tokens:
-
-#### Step 1: Start the Server
-
-```bash
+# 4. Start the dashboard server (Terminal 1 - keep running)
 npm run lhci:server
-```
 
-#### Step 2: Run the Wizard
-
-In a **new terminal**, run:
-
-```bash
+# 5. Create a project (first time only, Terminal 2)
 npx lhci wizard
-```
+#    Select: new-project
+#    Server URL: http://localhost:9001
+#    Name: my-project
+#    Copy the build token into projects-config.json
 
-Follow the prompts:
+# 6. Run Lighthouse tests
+npm run lhci:run -- --env=PROD
 
-```
-? Which wizard do you want to run? new-project
-? What is the URL of your LHCI server? http://localhost:9001
-? What would you like to name the project? My Project Name
-```
-
-#### Step 3: Save Your Tokens
-
-The wizard generates two tokens:
-
-```
-Created project My Project Name (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)!
-
-Use build token xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx to connect.
-Use admin token xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx for administrative access.
-```
-
-| Token | Purpose | Where to Save |
-|-------|---------|---------------|
-| **Build Token** | Authenticates test uploads | `lighthouserc.js` → `upload.token` |
-| **Admin Token** | Admin access to project | Save securely (e.g., `tokens.txt`) |
-
-#### Step 4: Configure the Build Token
-
-Edit `lighthouserc.js` and add your build token:
-
-```javascript
-module.exports = {
-  ci: {
-    // ... other config
-    upload: {
-      target: 'lhci',
-      serverBaseUrl: 'http://localhost:9001',
-      token: 'YOUR-BUILD-TOKEN-HERE',  // <-- Paste build token here
-    },
-  }
-};
-```
-
-> **Note:** `tokens.txt` is in `.gitignore` - safe to store admin token there locally.
-
----
-
-### Terminal 1: Start Dashboard
-
-```bash
-npm run lhci:server
-```
-
-Or use the full command:
-```bash
-npx lhci server --storage.storageMethod=sql --storage.sqlDialect=sqlite --storage.sqlDatabasePath=./lhci.db
-```
-
-You should see:
-
-```
-Server listening on port 9001
-```
-
-✅ **Keep this terminal running!**
-
-### Terminal 2: Run Tests
-
-```bash
-# Run Lighthouse tests
-npm run lhci
-
-# Generate carbon + QA reports
+# 7. Generate carbon reports (optional)
 npm run lhci:carbon
 ```
 
-### View Results
-
-1. **Dashboard**: Open [http://localhost:9001](http://localhost:9001) in browser
-2. **QA Reports**: Open `carbon-reports-by-host/index.html` in browser
-
-> **First time?** If the dashboard shows "Set up a new project", follow the [First-Time Setup](#first-time-setup-one-time-only) steps above.
-
 ---
 
-## Detailed Setup
+## Multi-Environment Setup
 
-### Step 1: Install Dependencies
+All environment configuration lives in `projects-config.json`:
 
-```bash
-npm install
+```json
+{
+  "CANARY": {
+    "urlFile": "./urls/canary-urls.json",
+    "cookieUrl": "https://your-site.example.com/ip-access",
+    "lhciToken": "your-build-token-here",
+    "serverBaseUrl": "http://localhost:9001",
+    "confluence": {
+      "pageId": "your-page-id",
+      "spaceId": "your-space-id",
+      "baseUrl": "https://your-instance.atlassian.net",
+      "tableLocalId": "your-table-local-id"
+    }
+  },
+  "PROD": {
+    "urlFile": "./urls/prod-urls.json",
+    "cookieUrl": null,
+    "lhciToken": "your-prod-build-token",
+    "serverBaseUrl": "http://localhost:9001",
+    "confluence": { "..." : "..." }
+  }
+}
 ```
 
-This installs:
-- `@lhci/cli` - Lighthouse CI command-line tool
-- `@lhci/server` - Dashboard server
-- `@tgwf/co2` - Carbon footprint calculations
-- `playwright` - Browser automation for authentication
-- `sqlite3` - Database for storing results
+### URL Files
 
-### Step 2: Configure Test URLs
-
-Edit `test-urls.json` to add your URLs:
+Each environment has a JSON file in `urls/`:
 
 ```json
 {
   "urls": [
-    "https://your-site.com/",
-    "https://your-site.com/page-1",
-    "https://your-site.com/page-2"
+    "https://your-site.example.com/",
+    "https://your-site.example.com/page-1",
+    "https://your-site.example.com/page-2"
   ]
 }
 ```
 
-### Step 3: Authentication (If Required)
+### Adding a New Environment
 
-If your site requires authentication, edit `setup-cookies.js`:
+1. Create `urls/staging-urls.json` with your URLs (the `urls/` folder is gitignored — keep real URLs local)
+2. Start the server: `npm run lhci:server`
+3. Run `npx lhci wizard` to create a new project and get a build token
+4. Add the entry to `projects-config.json` (also gitignored — keep tokens local)
+5. Run: `npm run lhci:run -- --env=STAGING`
 
-```javascript
-// Line 19: Update the IP whitelist/auth URL
-await page.goto("https://your-auth-url.com/login");
+No other file changes needed.
+
+### Cookie Authentication
+
+**Automated (Playwright)**: For environments with an IP-access page, set `cookieUrl` in the config. Cookies are auto-fetched and cached for 1 hour.
+
+```bash
+npm run cookies-setup -- --env=CANARY
 ```
 
-The system will automatically:
-1. Open a browser window
-2. Navigate to the auth URL
-3. Save cookies for Lighthouse to use
-4. Cache cookies for 1 hour
+**Manual (browser export)**: For environments using CloudFront signed cookies or other manual auth, set `cookieUrl: null`. Export cookies from your browser, paste them into `cookies-import.template.json`, then convert and save them for the target environment:
+
+```bash
+npm run cookies-import -- --env=PROD
+```
+
+This normalises the raw Chrome/browser export into Playwright `storageState` format and writes it to `cookies-prod.json`. You can also point at a specific file:
+
+```bash
+npm run cookies-import -- --env=PROD --input=my-export.json
+```
+
+The script accepts both a raw JSON array of cookies and an existing Playwright `storageState` object.
 
 ---
 
 ## Running Tests
 
-### Method 1: Full Automated Run
+All scripts accept `--env=ENV` to target a specific environment (defaults to `CANARY`):
 
 ```bash
-# Terminal 1 - Start dashboard (keep running)
-npm run lhci:server
+# Run Lighthouse tests
+npm run lhci:run -- --env=PROD
 
-# Terminal 2 - Run tests + generate reports
-npm run lhci && npm run lhci:carbon
-```
+# Extract scores from latest run
+npm run lhci:scores -- --env=PROD
 
-### Method 2: Step by Step
-
-#### Step 1: Start the Dashboard Server
-
-```bash
-npm run lhci:server
-```
-
-**What happens:**
-- Dashboard starts at `http://localhost:9001`
-- SQLite database created/loaded at `lhci.db`
-- Server waits for test results
-
-**Expected output:**
-```
-Server listening on port 9001
-```
-
-⚠️ **Keep this terminal open!**
-
----
-
-#### Step 2: Run Lighthouse Tests
-
-Open a **new terminal** and run:
-
-```bash
-npm run lhci
-```
-
-**What happens:**
-1. 🍪 Checks for cached authentication cookies
-2. 🌐 If cookies expired, opens browser to fetch new ones
-3. 🔍 Runs Lighthouse on each URL in `test-urls.json`
-4. 📤 Uploads results to the dashboard
-5. 💾 Saves JSON reports to `.lighthouseci/` folder
-
-**Expected output:**
-```
-🚀 Running Lighthouse CI with identifier: run-1706636400000
-⏰ Timestamp: 2026-01-30T15:00:00.000Z
-
-🍪 Using cached cookies (15 minutes old)
-📋 Loaded 3 cookie(s) from file
-
-✅ Lighthouse CI completed successfully!
-```
-
----
-
-#### Step 3: Generate Carbon & QA Reports
-
-```bash
+# Generate carbon reports (from latest run)
 npm run lhci:carbon
+
+# Fetch a historical build and generate carbon reports from it
+npm run lhci:fetch -- --env=PROD --list           # list all available builds
+npm run lhci:fetch -- --env=PROD --build=<id>     # pull a specific build's LHRs
+npm run lhci:carbon                               # then generate reports
+
+# Refresh cookies manually
+npm run cookies-setup -- --env=CANARY
+
+# Import browser-exported cookies (for CloudFront / manual auth environments)
+npm run cookies-import -- --env=PROD
 ```
 
-**Optional:** Specify monthly page views (default: 10,000):
+### What Happens During a Run
 
-```bash
-npm run lhci:carbon 50000
+1. Loads environment config from `projects-config.json`
+2. Checks for cached cookies (auto-refreshes if expired and `cookieUrl` is set)
+3. Generates a temporary LHCI JSON config with URLs, cookies, and token
+4. Runs `lhci autorun` (Lighthouse tests + upload to dashboard)
+5. Cleans up the temp config
+6. Results available at `http://localhost:9001` and in `.lighthouseci/`
+
+---
+
+## Per-Build Carbon Reports (lhci:fetch)
+
+By default, `lhci:carbon` reads whatever LHR JSON files are currently in `.lighthouseci/`. `lhci:fetch` lets you pull the raw reports from **any historical build** stored in the dashboard and run carbon analysis on it — without re-running Lighthouse.
+
+### Workflow
+
+```
+1. List available builds
+   npm run lhci:fetch -- --env=PROD --list
+
+2. Copy the build ID from the list output:
+   #  Build ID          Run ID                 Date
+   1  3a7f91b2c5d1...   abc123...              7 May 2026, 18:32
+
+3. Fetch that build's LHR files into .lighthouseci/
+   npm run lhci:fetch -- --env=PROD --build=3a7f91b2c5d1
+
+4. Generate carbon & QA reports from the fetched data
+   npm run lhci:carbon
 ```
 
-**What happens:**
-1. 📁 Reads Lighthouse JSON reports from `.lighthouseci/`
-2. 🧮 Calculates carbon footprint for each page
-3. 🎯 Extracts and prioritizes optimization opportunities
-4. 🌐 Analyzes global vs local issues
-5. 📝 Generates HTML reports in `carbon-reports-by-host/`
+### Notes
 
-**Expected output:**
-```
-📁 Found Lighthouse data at: .lighthouseci
-📊 Found 9 Lighthouse report(s)
-
-✅ Wrote 3 report(s) for host: example.com
-
-📂 All reports written to: carbon-reports-by-host
-🧭 Open carbon-reports-by-host/index.html in your browser.
-```
+- `--list` can be omitted; running `lhci:fetch` with just `--env` also prints the build list.
+- The fetch step **replaces** any existing LHR files in `.lighthouseci/` with the build's data.
+- The LHCI server must be running (`npm run lhci:server`) when you call `lhci:fetch`.
+- Partial build IDs work — the script matches on prefix.
 
 ---
 
@@ -486,22 +456,21 @@ npm run lhci:carbon 50000
 
 ### Dashboard (localhost:9001)
 
-The LHCI Dashboard provides:
-
-- 📈 **Historical Trends** - Track performance over time
-- 🔄 **Run Comparisons** - Compare before/after optimizations
-- 📊 **Score Breakdowns** - Detailed Lighthouse metrics
-- 🔔 **Assertions** - Pass/fail based on performance budgets
+- 📈 **Historical Trends** — Track performance over time
+- 🔄 **Run Comparisons** — Compare before/after optimizations
+- 📊 **Score Breakdowns** — Performance, Accessibility, Best Practices, SEO
+- 🔔 **Assertions** — Pass/fail based on `lighthouse:recommended` preset
 
 ### Carbon Reports (carbon-reports-by-host/)
 
+Generated by `npm run lhci:carbon`:
+
 ```
 carbon-reports-by-host/
-├── index.html                     # 📑 Main entry - lists all hosts
-└── your-site.com/
-    ├── index.html                 # 📊 Host summary with all URLs
-    ├── your-site.com-page-1.html  # 📄 Detailed report for page 1
-    └── your-site.com-page-2.html  # 📄 Detailed report for page 2
+├── index.html                    # 📑 Main entry - lists all hosts
+└── your-site.example.com/
+    ├── index.html                # 📊 Host summary with all URLs
+    └── your-site-page-1.html    # 📄 Detailed report per page
 ```
 
 #### Host Summary Page
@@ -535,7 +504,7 @@ carbon-reports-by-host/
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-#### Detail Page (Click any URL)
+#### Detail Page (click any URL)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -552,19 +521,19 @@ carbon-reports-by-host/
 │  💡 Click any item to see how to fix it                        │
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │ 🔴 HIGH  🌐 GLOBAL  Reduce unused JavaScript  💰 1.2MB  ▼ │   │
+│  │ 🔴 HIGH  🌐 GLOBAL  Reduce unused JavaScript  💰 1.2MB  ▼ │  │
 │  │ Remove unused functions and libraries from bundles...    │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │ 🟡 MEDIUM  📄 LOCAL  Use modern image formats  💰 450KB ▼ │   │
+│  │ 🟡 MEDIUM  📄 LOCAL  Use modern image formats  💰 450KB ▼ │  │
 │  │ Convert images to WebP format...                         │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Understanding Priority Badges
+### Priority Badges
 
 | Badge | Meaning | Action |
 |-------|---------|--------|
@@ -572,7 +541,7 @@ carbon-reports-by-host/
 | 🟡 **MEDIUM** | Items 4-6 | Fix soon |
 | 🟢 **LOW** | Remaining items | Nice to have |
 
-### Understanding Scope Badges
+### Scope Badges
 
 | Badge | Meaning | Action |
 |-------|---------|--------|
@@ -590,122 +559,154 @@ carbon-reports-by-host/
 
 ---
 
-## Configuration
+## Confluence Integration
 
-### Available npm Scripts
+Automatically publish Lighthouse scores to a Confluence table after each run.
 
-| Script | Command | Description |
-|--------|---------|-------------|
-| `npm run lhci:server` | `npx lhci server ...` | Start the dashboard server |
-| `npm run lhci` | `node run-lighthouse.js` | Run Lighthouse tests |
-| `npm run lhci:carbon` | `node calculate-carbon.js` | Generate carbon reports |
+```bash
+# Update Confluence table with latest scores
+npm run lhci:confluence -- --env=CANARY
+
+# Same, but also upload LHR JSON as attachments
+npm run lhci:confluence:attach -- --env=CANARY
+
+# Dry run (preview without changing Confluence)
+npm run lhci:confluence -- --env=CANARY --dry-run
+```
+
+### Setup
+
+1. Create a `.env` file:
+   ```
+   CONFLUENCE_EMAIL=your-email@example.com
+   CONFLUENCE_API_TOKEN=your-api-token
+   ```
+
+2. Set up a Confluence page with a table, then add the page ID, space ID, and table `ac:local-id` to the environment's `confluence` block in `projects-config.json`.
+
+---
+
+## Configuration Reference
+
+### npm Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run lhci:server` | Start the LHCI dashboard server |
+| `npm run lhci:run` | Run Lighthouse tests (use `-- --env=ENV`) |
+| `npm run lhci:scores` | Extract and print scores from latest run |
+| `npm run lhci:fetch` | List or download a historical build's LHRs (use `-- --env=ENV --list` or `--build=<id>`) |
+| `npm run lhci:carbon` | Generate carbon footprint HTML reports from `.lighthouseci/` |
+| `npm run lhci:confluence` | Publish scores to Confluence |
+| `npm run lhci:confluence:attach` | Publish scores + upload LHR JSON attachments |
+| `npm run cookies-setup` | Auto-fetch cookies via Playwright (for IP-whitelisted envs) |
+| `npm run cookies-import` | Convert a browser-exported cookie file to Playwright format |
+| `npm run sitespeed` | Run sitespeed.io analysis (separate pipeline) |
 
 ### Configuration Files
 
 | File | Purpose |
 |------|---------|
-| `test-urls.json` | URLs to test |
-| `lighthouserc.js` | Lighthouse CI configuration |
-| `setup-cookies.js` | Authentication setup |
-| `best-practices.json` | Fix recommendations |
-| `templates/` | HTML report templates |
+| `projects-config.example.json` | Template — copy to `projects-config.json` and fill in your values |
+| `projects-config.json` | Your local config with real tokens/URLs/IDs (gitignored, never committed) |
+| `urls/*.json` | URL lists per environment (gitignored, create locally) |
+| `best-practices.json` | Fix recommendation text for carbon reports |
+| `templates/` | HTML templates for carbon reports |
+| `.env` | Confluence API credentials (not committed) |
+| `.env.example` | Template for `.env` |
 
-### Customizing Monthly Views
+### Shared Libraries
 
-The carbon footprint calculations use monthly page views. Default is 10,000.
+| File | Exports |
+|------|---------|
+| `lib/config.js` | `parseEnvArg()`, `loadProjectConfig()`, `getCookiesFilePath()` |
+| `lib/cookies.js` | `readCookiesFromFile()`, `getAuthCookies()` |
 
-```bash
-# Use custom monthly views
-npm run lhci:carbon 50000  # 50,000 views/month
-npm run lhci:carbon 100000 # 100,000 views/month
+---
+
+## Project Structure
+
+```
+Lighthouse-CI/
+├── 📄 README.md                      # This file
+├── 📄 package.json                   # Dependencies & scripts
+├── 📄 projects-config.example.json   # Multi-environment config template (copy → projects-config.json)
+├── 📄 best-practices.json            # Fix recommendations for reports
+├── 📄 run-lighthouse.js              # Main test runner
+├── 📄 setup-cookies.js               # Playwright cookie capture
+├── 📄 calculate-carbon.js            # Carbon footprint report generator
+├── 📄 patch-lhci-ui.js               # Responsive CSS patch for LHCI dashboard
+├── 📄 .env.example                   # Confluence credential template
+│
+├── 📁 lib/                           # Shared utilities
+│   ├── config.js                     # Env parsing, project config loading
+│   └── cookies.js                    # Cookie reading and auth logic
+│
+├── 📁 urls/                          # (gitignored) URL lists per environment — create locally
+│   ├── canary-urls.json              #   e.g. {"urls": ["https://your-site.example.com/page-1"]}
+│   └── prod-urls.json
+│
+├── 📁 scripts/                       # Reporting scripts
+│   ├── extract-scores.js             # Parse LHR JSON into score summaries
+│   ├── update-confluence.js          # Publish scores to Confluence
+│   ├── fetch-build.js                # Fetch historical build LHRs from dashboard
+│   └── import-cookies.js             # Convert raw browser cookie export to Playwright format
+│
+├── 📁 templates/                     # HTML templates for carbon reports
+│   ├── detail.html                   # Individual page report
+│   ├── host-index.html               # Host summary page
+│   ├── host-row.html                 # Table row template
+│   ├── issue-summary.html            # Global/local issues
+│   ├── opportunity.html              # Opportunity card
+│   └── top-index.html                # Main index
+│
+├── 📁 .lighthouseci/                 # (generated) Raw LHR JSON reports
+├── 📁 carbon-reports-by-host/        # (generated) Carbon HTML reports
+├── 🍪 cookies-*.json                 # (generated) Auth cookies per env
+├── 🗄️  lhci.db                       # (generated) SQLite dashboard database
+└── 📋 tokens.txt                     # (local only) LHCI project tokens
 ```
 
 ---
 
 ## Troubleshooting
 
-### Common Issues
+### "Cannot connect to server"
 
-#### 1. "Cannot connect to server"
-
-**Problem:** Tests fail with connection error
-
-**Solution:**
+The LHCI server isn't running. Start it in a separate terminal:
 ```bash
-# Make sure dashboard is running in Terminal 1
 npm run lhci:server
 ```
 
-#### 2. "No Lighthouse data found"
+### "No Lighthouse data found"
 
-**Problem:** Carbon reports fail with "No valid LHR reports"
-
-**Solution:**
+Run Lighthouse tests before generating carbon reports:
 ```bash
-# Run Lighthouse tests first
-npm run lhci
-
-# Then generate carbon reports
+npm run lhci:run -- --env=PROD
 npm run lhci:carbon
 ```
 
-#### 3. "Cookies expired"
+### "Cookies expired" / 403 errors
 
-**Problem:** Authentication fails
+For environments with automated cookies (`cookieUrl` set), cookies refresh automatically. For manual environments:
+1. Export cookies from your browser
+2. Save as `cookies-{env}.json` in the project root
+3. Re-run the tests
 
-**Solution:**
-- The system auto-fetches new cookies
-- If it keeps failing, delete `cookies.json` and re-run
-- Check that `setup-cookies.js` has the correct auth URL
+### "Port 9001 already in use"
 
-#### 4. "Port 9001 already in use"
-
-**Problem:** Dashboard won't start
-
-**Solution:**
 ```bash
-# Kill existing process
 lsof -ti:9001 | xargs kill -9
-
-# Restart dashboard
 npm run lhci:server
 ```
 
-#### 5. "Cannot use sqlite without a database path"
+### Browser window opens during tests
 
-**Problem:** Server fails with database path error
+This is normal — Playwright is fetching authentication cookies for the target environment. Wait for it to complete.
 
-**Solution:**
-Use the correct command syntax (newer LHCI versions):
-```bash
-npm run lhci:server
-# Or:
-npx lhci server --storage.storageMethod=sql --storage.sqlDialect=sqlite --storage.sqlDatabasePath=./lhci.db
-```
+### Dashboard shows "Set up a new project"
 
-#### 6. Browser window opens during tests
-
-**Why:** This is normal! It's fetching authentication cookies.
-
-**Action:** Just wait for it to complete automatically.
-
-#### 7. Dashboard shows "Set up a new project"
-
-**Problem:** Opening localhost:9001 shows a blank page asking to create a project
-
-**Solution:**
-This happens when:
-- It's your first time running the server
-- The `lhci.db` database was deleted
-
-Run the wizard to create a project:
-```bash
-npx lhci wizard
-```
-
-Select `new-project`, enter your server URL (`http://localhost:9001`), and save the generated build token to `lighthouserc.js`.
-
-See [First-Time Setup](#first-time-setup-one-time-only) for detailed steps.
+Run `npx lhci wizard` to create a project (requires the server to be running).
 
 ---
 
@@ -717,79 +718,33 @@ See [First-Time Setup](#first-time-setup-one-time-only) for detailed steps.
 - **Minimum:** Weekly
 - **Best Practice:** Integrate into CI/CD pipeline
 
-### Can I test authenticated pages?
-
-Yes! The system uses Playwright to handle authentication:
-1. Edit `setup-cookies.js` with your auth URL
-2. Cookies are cached for 1 hour
-3. Tests automatically use the saved cookies
-
 ### How do I add new URLs to test?
 
-Edit `test-urls.json`:
-```json
-{
-  "urls": [
-    "https://your-site.com/new-page"
-  ]
-}
-```
+Edit the URL file for your environment (e.g., `urls/prod-urls.json`) and add entries to the `urls` array.
+
+### How do I add a new environment?
+
+1. Create `urls/{env}-urls.json`
+2. Run `npx lhci wizard` to get a build token
+3. Add the entry to `projects-config.json`
+4. Run: `npm run lhci:run -- --env={ENV}`
+
+### Can I test authenticated pages?
+
+Yes. Set `cookieUrl` in `projects-config.json` for automated Playwright capture, or set it to `null` and manually export cookies to `cookies-{env}.json`.
 
 ### What affects the carbon footprint?
 
-- Page weight (images, scripts, styles)
-- Number of requests
-- Server efficiency
-- CDN usage
-- Caching policies
+Page weight (images, scripts, styles), number of requests, server efficiency, CDN usage, and caching policies.
 
 ### How do I reset all data?
 
 ```bash
-# Delete database
-rm lhci.db
-
-# Delete cached cookies
-rm cookies.json
-
-# Delete reports
-rm -rf .lighthouseci carbon-reports-by-host
+rm lhci.db                          # Dashboard database
+rm cookies-*.json                   # Auth cookies
+rm -rf .lighthouseci                # Raw Lighthouse reports
+rm -rf carbon-reports-by-host       # Carbon HTML reports
 ```
-
----
-
-## Project Structure
-
-```
-Lighthouse-CI/
-├── 📄 README.md                 # This file
-├── 📄 package.json              # Dependencies & scripts
-├── 📄 lighthouserc.js           # LHCI configuration
-├── 📄 test-urls.json            # URLs to test
-├── 📄 run-lighthouse.js         # Main test runner
-├── 📄 setup-cookies.js          # Authentication handler
-├── 📄 calculate-carbon.js       # Carbon report generator
-├── 📄 best-practices.json       # Fix recommendations
-├── 📁 templates/                # HTML report templates
-│   ├── detail.html              # Individual page report
-│   ├── host-index.html          # Host summary page
-│   ├── host-row.html            # Table row template
-│   ├── issue-summary.html       # Global/local issues
-│   ├── opportunity.html         # Opportunity card
-│   └── top-index.html           # Main index
-├── 📁 .lighthouseci/            # Raw Lighthouse reports (generated)
-├── 📁 carbon-reports-by-host/   # HTML reports (generated)
-└── 🗄️ lhci.db                   # SQLite database (generated)
-```
-
----
-
-## Support
-
-For questions or issues:
-- Check the [Troubleshooting](#troubleshooting) section
-- Review the [FAQ](#faq)
-- Contact: Madhur Batra
 
 ---
 
@@ -799,4 +754,4 @@ ISC License
 
 ---
 
-*Built with ❤️ for better web performance and a greener internet*
+*Built with ❤️ for better web performance and a greener internet.*

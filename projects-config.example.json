@@ -1,0 +1,42 @@
+{
+  "CANARY": {
+    "urlFile": "./urls/canary-urls.json",
+    "cookieUrl": "https://your-site.example.com/ip-access",
+    "lhciToken": "REPLACE_WITH_LHCI_BUILD_TOKEN",
+    "serverBaseUrl": "http://localhost:9001",
+    "confluence": {
+      "pageId": "REPLACE_WITH_CONFLUENCE_PAGE_ID",
+      "spaceId": "REPLACE_WITH_CONFLUENCE_SPACE_ID",
+      "baseUrl": "https://your-instance.atlassian.net",
+      "tableLocalId": "REPLACE_WITH_TABLE_LOCAL_ID"
+    }
+  },
+  "PROD": {
+    "urlFile": "./urls/prod-urls.json",
+    "cookieUrl": null,
+    "lhciToken": "REPLACE_WITH_LHCI_BUILD_TOKEN",
+    "serverBaseUrl": "http://localhost:9001",
+    "numberOfRuns": 1,
+    "confluence": {
+      "pageId": "REPLACE_WITH_CONFLUENCE_PAGE_ID",
+      "spaceId": "REPLACE_WITH_CONFLUENCE_SPACE_ID",
+      "baseUrl": "https://your-instance.atlassian.net",
+      "tableLocalId": "REPLACE_WITH_TABLE_LOCAL_ID"
+    }
+  },
+  "PROD_DESKTOP": {
+    "urlFile": "./urls/prod-urls.json",
+    "cookieUrl": null,
+    "cookieEnv": "PROD",
+    "lhciToken": "REPLACE_WITH_LHCI_BUILD_TOKEN",
+    "serverBaseUrl": "http://localhost:9001",
+    "presetFile": "desktop",
+    "numberOfRuns": 1,
+    "confluence": {
+      "pageId": "REPLACE_WITH_CONFLUENCE_PAGE_ID",
+      "spaceId": "REPLACE_WITH_CONFLUENCE_SPACE_ID",
+      "baseUrl": "https://your-instance.atlassian.net",
+      "tableLocalId": "REPLACE_WITH_TABLE_LOCAL_ID"
+    }
+  }
+}
